@@ -1,11 +1,22 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { withBase } from '../lib/paths';
 
-const projects = [
+type ShowcaseProject = {
+  name: string;
+  tagline: string;
+  github: string;
+  bullets: string[];
+  /** Public URL path, e.g. `/videos/foo.mp4` (file lives in `public/videos/foo.mp4`) */
+  launchVideo?: string;
+};
+
+const projects: ShowcaseProject[] = [
   {
     name: 'price-negotiation-rl-OpenEnv',
     tagline: 'RL environment where an LLM agent negotiates prices against an LLM-powered seller using real marketplace listings.',
     github: 'https://github.com/Vidit-Ostwal/price-negotiation-rl-OpenEnv',
+    launchVideo: '/videos/price-negotiation-launch.mp4',
     bullets: [
       'Three difficulty levels (Easy / Medium / Hard) with varying zones of possible agreement — from a $480 ZOPA down to no ZOPA, testing walk-away discipline.',
       'Six-component reward system on a [−1, 1] scale: surplus capture, walk-away correctness, output compliance, closing speed, opening offer quality, and concession smoothness.',
@@ -18,6 +29,7 @@ const projects = [
     name: 'Maze-Bench-OpenEnv',
     tagline: 'Ice-sliding multi-player maze environment on OpenEnv for benchmarking planning and coordination in RL agents.',
     github: 'https://github.com/Vidit-Ostwal/Maze-Bench-OpenEnv',
+    launchVideo: '/videos/maze-bench-launch.mp4',
     bullets: [
       'Ice-sliding mechanics — agents slide until hitting a wall or another player, requiring multi-step lookahead over reactive movement.',
       'Simultaneous multi-player movement; solved only when every player reaches an exit cell in the same phase.',
@@ -30,6 +42,7 @@ const projects = [
     name: 'MakeMyDocsBot',
     tagline: 'CrewAI-powered bot that auto-syncs multilingual documentation across feature branches via a Git pre-push hook.',
     github: 'https://github.com/Vidit-Ostwal/MakeMyDocsBot',
+    launchVideo: '/videos/building-makemydocsbot-launch.mp4',
     bullets: [
       '2nd Runner-Up at the CrewAI Fall Agentic AI Challenge.',
       'Detects English documentation changes and auto-generates synchronised translations (Korean, Brazilian Portuguese) with no manual intervention.',
@@ -71,6 +84,19 @@ const projects = [
           </div>
           <a href={p.github} target="_blank" rel="noopener" class="gh-link mono">GitHub →</a>
         </div>
+        {p.launchVideo && (
+          <div class="launch-video">
+            <p class="video-label mono">Launch video</p>
+            <video
+              controls
+              playsinline
+              preload="metadata"
+              class="video-el"
+            >
+              <source src={withBase(p.launchVideo)} type="video/mp4" />
+            </video>
+          </div>
+        )}
         <ul class="bullets">
           {p.bullets.map(b => <li>{b}</li>)}
         </ul>
@@ -109,6 +135,16 @@ const projects = [
 
   .gh-link { font-size: 0.7rem; color: #999999; text-decoration: none; transition: color 0.15s; white-space: nowrap; padding-top: 0.15rem; flex-shrink: 0; }
   .gh-link:hover { color: #111111; }
+
+  .launch-video { margin-bottom: 1rem; }
+  .video-label { font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 0.5rem; }
+  .video-el {
+    width: 100%;
+    max-height: 360px;
+    border-radius: 6px;
+    border: 1px solid #e4e4e4;
+    background: #f7f7f7;
+  }
 
   .bullets { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
   .bullets li {
