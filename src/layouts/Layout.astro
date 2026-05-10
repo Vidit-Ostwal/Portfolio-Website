@@ -11,6 +11,17 @@ interface Props {
 const { title: pageTitle, description = 'ML/AI Engineer — Vidit Ostwal' } = Astro.props;
 
 const tabTitle = 'Vidit-Ostwal';
+
+/** Absolute icon URL for production (Safari / some clients ignore relative SVG); falls back to base path in dev. */
+function iconUrl(rel: string): string {
+  const path = rel.startsWith('/') ? rel.slice(1) : rel;
+  const siteHref = Astro.site?.href;
+  if (siteHref) {
+    const base = siteHref.endsWith('/') ? siteHref : `${siteHref}/`;
+    return new URL(path, base).href;
+  }
+  return withBase(`/${path}`);
+}
 ---
 
 <!doctype html>
@@ -22,7 +33,11 @@ const tabTitle = 'Vidit-Ostwal';
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
     <title>{tabTitle}</title>
-    <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
+    <link rel="icon" type="image/svg+xml" href={iconUrl('favicon.svg')} sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href={iconUrl('favicon-32.png')} />
+    <link rel="icon" type="image/png" sizes="48x48" href={iconUrl('favicon-48.png')} />
+    <link rel="shortcut icon" href={iconUrl('favicon.ico')} />
+    <link rel="apple-touch-icon" sizes="180x180" href={iconUrl('apple-touch-icon.png')} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
