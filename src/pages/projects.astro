@@ -13,7 +13,7 @@ type ShowcaseProject = {
 
 const projects: ShowcaseProject[] = [
   {
-    name: 'price-negotiation-rl-OpenEnv',
+    name: 'Price Negotiation RL',
     tagline: 'RL environment where an LLM agent negotiates prices against an LLM-powered seller using real marketplace listings.',
     github: 'https://github.com/Vidit-Ostwal/price-negotiation-rl-OpenEnv',
     launchVideo: '/videos/price-negotiation-launch.mp4',
@@ -26,7 +26,7 @@ const projects: ShowcaseProject[] = [
     ],
   },
   {
-    name: 'Maze-Bench-OpenEnv',
+    name: 'Maze Bench',
     tagline: 'Ice-sliding multi-player maze environment on OpenEnv for benchmarking planning and coordination in RL agents.',
     github: 'https://github.com/Vidit-Ostwal/Maze-Bench-OpenEnv',
     launchVideo: '/videos/maze-bench-launch.mp4',
@@ -52,7 +52,7 @@ const projects: ShowcaseProject[] = [
     ],
   },
   {
-    name: 'RLM-demo',
+    name: 'RLM Demo',
     tagline: 'Full-stack interactive console for demonstrating and chatting with Reinforcement Learning models and agentic systems.',
     github: 'https://github.com/Vidit-Ostwal/RLM-demo',
     bullets: [
@@ -74,33 +74,43 @@ const projects: ShowcaseProject[] = [
     <p class="sub">Things I've built.</p>
   </div>
 
-  <div class="fade-in project-list">
+  <div class="project-grid">
     {projects.map((p, i) => (
-      <div class={`project ${i > 0 ? 'bt' : ''}`}>
-        <div class="proj-header">
-          <div>
-            <span class="proj-name mono">{p.name}</span>
+      <article class="fade-in project-card">
+        <div class="card-top">
+          <span class="proj-index mono">{String(i + 1).padStart(2, '0')}</span>
+          <div class="proj-meta">
+            <h2 class="proj-name">{p.name}</h2>
             <p class="proj-tag">{p.tagline}</p>
           </div>
-          <a href={p.github} target="_blank" rel="noopener" class="gh-link mono">GitHub →</a>
+          <a href={p.github} target="_blank" rel="noopener" class="gh-link mono">
+            GitHub →
+          </a>
         </div>
+
         {p.launchVideo && (
-          <div class="launch-video">
-            <p class="video-label mono">Launch video</p>
-            <video
-              controls
-              playsinline
-              preload="metadata"
-              class="video-el"
-            >
-              <source src={withBase(p.launchVideo)} type="video/mp4" />
-            </video>
+          <div class="video-section">
+            <button class="video-toggle mono" type="button" aria-expanded="false">
+              <span class="toggle-icon">▶</span>
+              <span>Launch video</span>
+            </button>
+            <div class="video-wrap" hidden>
+              <video
+                controls
+                playsinline
+                preload="metadata"
+                class="video-el"
+              >
+                <source src={withBase(p.launchVideo)} type="video/mp4" />
+              </video>
+            </div>
           </div>
         )}
+
         <ul class="bullets">
           {p.bullets.map(b => <li>{b}</li>)}
         </ul>
-      </div>
+      </article>
     ))}
   </div>
 
@@ -116,43 +126,157 @@ const projects: ShowcaseProject[] = [
 
   .mono { font-family: "IBM Plex Mono", monospace; }
 
-  .project-list { border: 1px solid #e4e4e4; border-radius: 6px; overflow: hidden; }
-
-  .project { padding: 1.1rem; background: #ffffff; }
-  .bt { border-top: 1px solid #f0f0f0; }
-
-  .proj-header {
+  /* Grid: each project is a distinct card */
+  .project-grid {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1.5rem;
-    margin-bottom: 0.85rem;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 1.25rem;
   }
 
-  .proj-name { font-size: 0.88rem; font-weight: 500; color: #111111; display: block; margin-bottom: 0.25rem; }
-  .proj-tag  { font-size: 0.78rem; color: #555555; line-height: 1.5; margin: 0; }
+  .project-card {
+    border: 1px solid #e4e4e4;
+    border-radius: 8px;
+    padding: 1.4rem 1.5rem;
+    background: #ffffff;
+    transition: border-color 0.2s ease;
+  }
+  .project-card:hover {
+    border-color: #c8c8c8;
+  }
 
-  .gh-link { font-size: 0.7rem; color: #999999; text-decoration: none; transition: color 0.15s; white-space: nowrap; padding-top: 0.15rem; flex-shrink: 0; }
+  /* Card header row */
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  .proj-index {
+    font-size: 0.62rem;
+    color: #999999;
+    letter-spacing: 0.04em;
+    padding-top: 0.22rem;
+    flex-shrink: 0;
+    min-width: 1.5rem;
+    line-height: 1;
+  }
+
+  .proj-meta { flex: 1; min-width: 0; }
+
+  .proj-name {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #111111;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.28rem;
+    line-height: 1.25;
+  }
+
+  .proj-tag {
+    font-size: 0.79rem;
+    color: #666666;
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  .gh-link {
+    font-size: 0.68rem;
+    color: #aaaaaa;
+    text-decoration: none;
+    transition: color 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding-top: 0.2rem;
+  }
   .gh-link:hover { color: #111111; }
 
-  .launch-video { margin-bottom: 1rem; }
-  .video-label { font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: #999999; margin: 0 0 0.5rem; }
+  /* Launch video toggle */
+  .video-section { margin-bottom: 1rem; }
+
+  .video-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #f7f7f7;
+    border: 1px solid #e4e4e4;
+    border-radius: 4px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.66rem;
+    color: #777777;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .video-toggle:hover {
+    background: #efefef;
+    color: #111111;
+    border-color: #c8c8c8;
+  }
+  .video-toggle[aria-expanded="true"] {
+    color: #111111;
+    border-color: #c8c8c8;
+    background: #f0f0f0;
+  }
+
+  .toggle-icon {
+    font-size: 0.5rem;
+    display: inline-block;
+    transition: transform 0.2s ease;
+    line-height: 1;
+  }
+  .video-toggle[aria-expanded="true"] .toggle-icon {
+    transform: rotate(90deg);
+  }
+
+  .video-wrap { margin-top: 0.7rem; }
+  .video-wrap[hidden] { display: none; }
+
   .video-el {
     width: 100%;
-    max-height: 360px;
+    max-height: 340px;
     border-radius: 6px;
     border: 1px solid #e4e4e4;
     background: #f7f7f7;
+    display: block;
   }
 
-  .bullets { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+  /* Bullets */
+  .bullets {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
   .bullets li {
-    font-size: 0.82rem;
+    font-size: 0.81rem;
     color: #555555;
     line-height: 1.65;
     padding-left: 1.1rem;
     position: relative;
   }
-  .bullets li::before { content: '–'; position: absolute; left: 0; color: #cccccc; }
+  .bullets li::before {
+    content: '–';
+    position: absolute;
+    left: 0;
+    color: #cccccc;
+  }
 </style>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('.video-toggle').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const section = btn.closest('.video-section');
+      const wrap = section?.querySelector<HTMLElement>('.video-wrap');
+      if (!wrap) return;
+
+      const opening = wrap.hidden;
+      wrap.hidden = !opening;
+      btn.setAttribute('aria-expanded', opening ? 'true' : 'false');
+
+      if (!opening) {
+        wrap.querySelector('video')?.pause();
+      }
+    });
+  });
+</script>
