@@ -1,0 +1,141 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Vidit Ostwal" description="ML/AI Engineer building agentic AI systems and RL environments.">
+<div class="page">
+
+  <section class="fade-in hero">
+    <div class="hero-left">
+      <p class="role mono">ML / AI Engineer</p>
+      <h1>Vidit Ostwal</h1>
+      <p class="bio">
+        I build agentic AI systems and reinforcement learning environments.
+        Top 10 contributor to CrewAI. Interested in autonomous multi-agent
+        coordination and long-horizon planning.
+      </p>
+      <div class="links">
+
+        <!-- GitHub -->
+        <a href="https://github.com/Vidit-Ostwal" target="_blank" rel="noopener" class="icon-link" aria-label="GitHub">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+          </svg>
+        </a>
+
+        <!-- LinkedIn -->
+        <a href="https://www.linkedin.com/in/viditostwal/" target="_blank" rel="noopener" class="icon-link" aria-label="LinkedIn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+            <rect x="2" y="9" width="4" height="12"/>
+            <circle cx="4" cy="4" r="2"/>
+          </svg>
+        </a>
+
+        <!-- X / Twitter -->
+        <a href="https://x.com/ViditOstwal" target="_blank" rel="noopener" class="icon-link" aria-label="X">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+        </a>
+
+        <!-- Email -->
+        <a href="mailto:viditostwal@gmail.com" class="icon-link" aria-label="Email">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+        </a>
+
+      </div>
+    </div>
+    <div class="photo">
+      <img src="/photo.jpg" alt="Vidit Ostwal" />
+    </div>
+  </section>
+
+  <section class="fade-in section">
+    <h2 class="label mono">Highlights</h2>
+    <div class="hl-list">
+      {[
+        { title: 'Top 10 Contributor — CrewAI', sub: 'Multi-agent AI orchestration framework · 25k+ stars' },
+        { title: '2nd Runner-Up — CrewAI Global Hackathon', sub: 'Autonomous research & report generation pipeline' },
+        { title: 'Technical Reviewer — CrewAI Book', sub: 'Official published guide on the framework' },
+      ].map(item => (
+        <div class="hl-row">
+          <p class="hl-title">{item.title}</p>
+          <p class="hl-sub">{item.sub}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="fade-in section">
+    <h2 class="label mono">Pages</h2>
+    <div class="nav-grid">
+      {[
+        { href: '/experience', label: 'Experience', desc: 'Where I\'ve worked' },
+        { href: '/projects',   label: 'Projects',   desc: 'What I\'ve built'  },
+        { href: '/blog',       label: 'Blog',        desc: 'What I\'ve written'},
+      ].map(c => (
+        <a href={c.href} class="nav-card">
+          <span class="nav-label">{c.label}</span>
+          <span class="nav-desc">{c.desc}</span>
+        </a>
+      ))}
+    </div>
+  </section>
+
+</div>
+</Layout>
+
+<style>
+  .page { max-width: 680px; margin: 0 auto; padding: 7rem 1.5rem 4rem; }
+
+  .hero { display: flex; align-items: flex-start; justify-content: space-between; gap: 3rem; margin-bottom: 5rem; flex-wrap: wrap; }
+  .hero-left { flex: 1; min-width: 260px; }
+
+  .role { font-size: 0.7rem; color: #999999; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 0.6rem; }
+
+  h1 { font-size: 1.9rem; font-weight: 600; letter-spacing: -0.025em; color: #111111; margin-bottom: 0.9rem; line-height: 1.15; }
+
+  .bio { font-size: 0.92rem; color: #555555; line-height: 1.75; margin-bottom: 1.4rem; max-width: 440px; }
+
+  .links { display: flex; align-items: center; gap: 0.85rem; }
+
+  .icon-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #aaaaaa;
+    transition: color 0.15s;
+  }
+  .icon-link:hover { color: #111111; }
+
+  .photo {
+    width: 160px; height: 160px; border-radius: 8px;
+    background: #f7f7f7; border: 1px solid #e4e4e4;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; overflow: hidden;
+  }
+  .photo img { width: 100%; height: 100%; object-fit: cover; }
+  .initials { font-size: 1rem; color: #cccccc; }
+
+  .section { margin-bottom: 3.5rem; }
+
+  .label { font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: #999999; margin-bottom: 1.1rem; }
+
+  .hl-list { display: flex; flex-direction: column; }
+  .hl-row { padding: 0.85rem 0; border-bottom: 1px solid #e4e4e4; }
+  .hl-row:first-child { border-top: 1px solid #e4e4e4; }
+  .hl-title { font-size: 0.88rem; font-weight: 500; color: #111111; margin-bottom: 0.2rem; }
+  .hl-sub { font-size: 0.78rem; color: #999999; }
+
+  .nav-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #e4e4e4; border: 1px solid #e4e4e4; border-radius: 6px; overflow: hidden; }
+  .nav-card { display: flex; flex-direction: column; gap: 0.3rem; padding: 1rem 1.1rem; background: #ffffff; text-decoration: none; transition: background 0.15s; }
+  .nav-card:hover { background: #f7f7f7; }
+  .nav-label { font-size: 0.85rem; font-weight: 500; color: #111111; }
+  .nav-desc { font-size: 0.75rem; color: #999999; }
+
+  .mono { font-family: "IBM Plex Mono", monospace; }
+</style>

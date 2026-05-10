@@ -1,0 +1,70 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { substackPosts } from '../../data/projects';
+
+const byCategory = substackPosts.reduce<Record<string, typeof substackPosts>>((acc, p) => {
+  if (!acc[p.category]) acc[p.category] = [];
+  acc[p.category].push(p);
+  return acc;
+}, {});
+
+function fmtDate(d: string) {
+  return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+---
+
+<Layout title="Blog — Vidit Ostwal">
+<div class="page">
+
+  <div class="fade-in header">
+    <h1>Writing</h1>
+    <p class="sub">I share what I'm learning.</p>
+  </div>
+
+  <div class="fade-in categories">
+    {Object.keys(byCategory).map(cat => (
+      <div class="cat-block">
+        <h2 class="cat-label mono">{cat}</h2>
+        <div class="post-list">
+          {byCategory[cat].map((post, i) => (
+            <a href={post.url} target="_blank" rel="noopener" class={`post-row ${i > 0 ? 'bt' : ''}`}>
+              <div class="post-left">
+                <p class="post-title">{post.title}</p>
+                {post.summary && <p class="post-summary">{post.summary}</p>}
+              </div>
+              <span class="post-date mono">{fmtDate(post.date)}</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+
+</div>
+</Layout>
+
+<style>
+  .page { max-width: 680px; margin: 0 auto; padding: 7rem 1.5rem 4rem; }
+
+  .header { margin-bottom: 3rem; }
+  h1 { font-size: 1.9rem; font-weight: 600; letter-spacing: -0.025em; color: #111111; margin-bottom: 0.35rem; }
+  .sub { font-size: 0.88rem; color: #999999; }
+
+  .mono { font-family: "IBM Plex Mono", monospace; }
+
+  .categories { display: flex; flex-direction: column; gap: 2.5rem; }
+
+  .cat-label { font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: #999999; margin-bottom: 0.85rem; }
+
+  .post-list { border: 1px solid #e4e4e4; border-radius: 6px; overflow: hidden; }
+
+  .post-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1.5rem; padding: 0.9rem 1.1rem; background: #ffffff; text-decoration: none; transition: background 0.15s; flex-wrap: wrap; }
+  .post-row:hover { background: #f7f7f7; }
+  .bt { border-top: 1px solid #f0f0f0; }
+
+  .post-left { flex: 1; min-width: 200px; }
+  .post-title { font-size: 0.88rem; font-weight: 500; color: #111111; line-height: 1.4; margin-bottom: 0.25rem; }
+  .post-summary { font-size: 0.78rem; color: #555555; line-height: 1.5; }
+
+  .post-date { font-size: 0.68rem; color: #888888; flex-shrink: 0; white-space: nowrap; padding-top: 0.15rem; }
+</style>

@@ -1,0 +1,177 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+---
+
+<Layout title={`${post.data.title} — Vidit Ostwal`} description={post.data.summary}>
+  <div style="max-width:680px; margin:0 auto; padding:8rem 1.5rem 4rem;">
+
+    <!-- Back -->
+    <a
+      href="/blog"
+      style="display:inline-flex; align-items:center; gap:0.4rem; font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:#555; text-decoration:none; margin-bottom:2.5rem; transition:color 0.2s;"
+      onmouseover="this.style.color='#4ade80';"
+      onmouseout="this.style.color='#555';"
+    >
+      ← Back to Blog
+    </a>
+
+    <!-- Header -->
+    <div class="fade-in" style="margin-bottom:3rem;">
+      <div style="display:flex; gap:0.35rem; flex-wrap:wrap; margin-bottom:1rem;">
+        {post.data.tags.map((tag: string) => (
+          <span style="font-family:'JetBrains Mono',monospace; font-size:0.68rem; color:#4ade80; background:#0f1a11; border:1px solid #1e3a21; border-radius:3px; padding:0.15rem 0.45rem;">
+            {tag}
+          </span>
+        ))}
+      </div>
+      <h1 style="font-size:1.75rem; font-weight:600; line-height:1.3; margin:0 0 0.75rem; color:#e8e8e8;">
+        {post.data.title}
+      </h1>
+      <p style="margin:0; font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:#444;">
+        {formatDate(post.data.date)}
+      </p>
+    </div>
+
+    <!-- Content -->
+    <article class="fade-in prose">
+      <Content />
+    </article>
+
+    <!-- Footer -->
+    <div style="margin-top:4rem; padding-top:2rem; border-top:1px solid #1e1e1e; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+      <a
+        href="/blog"
+        style="font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:#555; text-decoration:none; transition:color 0.2s;"
+        onmouseover="this.style.color='#4ade80';"
+        onmouseout="this.style.color='#555';"
+      >
+        ← More posts
+      </a>
+      <a
+        href="https://github.com/Vidit-Ostwal"
+        target="_blank"
+        rel="noopener"
+        style="font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:#555; text-decoration:none; transition:color 0.2s;"
+        onmouseover="this.style.color='#4ade80';"
+        onmouseout="this.style.color='#555';"
+      >
+        GitHub →
+      </a>
+    </div>
+
+  </div>
+</Layout>
+
+<style>
+  .prose {
+    color: #b0b0b0;
+    font-size: 0.92rem;
+    line-height: 1.8;
+  }
+
+  .prose h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #e8e8e8;
+    margin: 2rem 0 0.75rem;
+  }
+
+  .prose h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #e8e8e8;
+    margin: 1.5rem 0 0.6rem;
+  }
+
+  .prose p {
+    margin: 0 0 1.2rem;
+    color: #999;
+  }
+
+  .prose strong {
+    color: #e8e8e8;
+    font-weight: 600;
+  }
+
+  .prose code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    color: #4ade80;
+    background: #0f1a11;
+    border: 1px solid #1e3a21;
+    border-radius: 4px;
+    padding: 0.1rem 0.35rem;
+  }
+
+  .prose pre {
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 8px;
+    padding: 1.25rem;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+  }
+
+  .prose pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #c8c8c8;
+    font-size: 0.82rem;
+  }
+
+  .prose ul, .prose ol {
+    padding-left: 1.5rem;
+    margin: 0 0 1.2rem;
+  }
+
+  .prose li {
+    margin-bottom: 0.4rem;
+    color: #999;
+  }
+
+  .prose a {
+    color: #4ade80;
+    text-decoration: none;
+    border-bottom: 1px solid #1e3a21;
+    transition: border-color 0.2s;
+  }
+
+  .prose a:hover {
+    border-color: #4ade80;
+  }
+
+  .prose blockquote {
+    border-left: 2px solid #4ade80;
+    padding-left: 1rem;
+    margin: 1.5rem 0;
+    color: #666;
+    font-style: italic;
+  }
+
+  .prose hr {
+    border: none;
+    border-top: 1px solid #222;
+    margin: 2rem 0;
+  }
+</style>

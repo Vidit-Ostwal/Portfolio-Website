@@ -1,0 +1,57 @@
+---
+import '../styles/global.css';
+import Nav from '../components/Nav.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+const { title, description = 'ML/AI Engineer — Vidit Ostwal' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <Nav />
+    <main>
+      <slot />
+    </main>
+    <footer>
+      <div class="wrap">
+        <span>© {new Date().getFullYear()} Vidit Ostwal</span>
+      </div>
+    </footer>
+    <script>
+      const io = new IntersectionObserver(
+        (es) => es.forEach((e) => e.isIntersecting && e.target.classList.add('visible')),
+        { threshold: 0.06 }
+      );
+      document.querySelectorAll('.fade-in').forEach((el) => io.observe(el));
+    </script>
+  </body>
+</html>
+
+<style>
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem 0;
+    margin-top: 8rem;
+  }
+  .wrap {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    color: var(--text-3);
+  }
+</style>

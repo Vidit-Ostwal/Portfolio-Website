@@ -1,0 +1,58 @@
+---
+const links = [
+  { href: '/', label: 'home' },
+  { href: '/experience', label: 'experience' },
+  { href: '/projects', label: 'projects' },
+  { href: '/blog', label: 'blog' },
+];
+const path = Astro.url.pathname;
+const active = (href: string) => href === '/' ? path === '/' : path.startsWith(href);
+---
+
+<nav>
+  <div class="inner">
+    <a href="/" class="name">Vidit Ostwal</a>
+    <div class="links">
+      {links.map(l => (
+        <a href={l.href} class={active(l.href) ? 'link on' : 'link'}>{l.label}</a>
+      ))}
+    </div>
+  </div>
+</nav>
+
+<style>
+  nav {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 50;
+    background: #ffffff;
+    border-bottom: 1px solid #e4e4e4;
+    height: 50px;
+  }
+  .inner {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .name {
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: #111111;
+  }
+  .links { display: flex; gap: 1.75rem; }
+  .link {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.68rem;
+    color: #999999;
+    text-decoration: none;
+    transition: color 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .link:hover { color: #555555; }
+  .link.on { color: #111111; }
+</style>

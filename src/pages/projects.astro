@@ -1,0 +1,122 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const projects = [
+  {
+    name: 'price-negotiation-rl-OpenEnv',
+    tagline: 'RL environment where an LLM agent negotiates prices against an LLM-powered seller using real marketplace listings.',
+    github: 'https://github.com/Vidit-Ostwal/price-negotiation-rl-OpenEnv',
+    bullets: [
+      'Three difficulty levels (Easy / Medium / Hard) with varying zones of possible agreement — from a $480 ZOPA down to no ZOPA, testing walk-away discipline.',
+      'Six-component reward system on a [−1, 1] scale: surplus capture, walk-away correctness, output compliance, closing speed, opening offer quality, and concession smoothness.',
+      'Walk-away penalty weighted 5× — trains the agent to value discipline over forcing a bad deal.',
+      'Pure Python arithmetic grader ensures reproducibility; stochastic LLM sampling on both sides creates diverse training signal across episodes.',
+      'Deployable on Hugging Face Spaces, Docker, or locally via uv; ships with a browser playground showing real-time reward breakdowns.',
+    ],
+  },
+  {
+    name: 'Maze-Bench-OpenEnv',
+    tagline: 'Ice-sliding multi-player maze environment on OpenEnv for benchmarking planning and coordination in RL agents.',
+    github: 'https://github.com/Vidit-Ostwal/Maze-Bench-OpenEnv',
+    bullets: [
+      'Ice-sliding mechanics — agents slide until hitting a wall or another player, requiring multi-step lookahead over reactive movement.',
+      'Simultaneous multi-player movement; solved only when every player reaches an exit cell in the same phase.',
+      'Reward shaping penalises repeated actions (−1), reversals, and revisited board states scaled by prior visit count.',
+      'Standard OpenEnv reset()/step() API — compatible with any RL training loop without environment-specific wrappers.',
+      'Includes dataset validation tooling and GIF rendering from recorded rollouts for debugging agent trajectories.',
+    ],
+  },
+  {
+    name: 'MakeMyDocsBot',
+    tagline: 'CrewAI-powered bot that auto-syncs multilingual documentation across feature branches via a Git pre-push hook.',
+    github: 'https://github.com/Vidit-Ostwal/MakeMyDocsBot',
+    bullets: [
+      '2nd Runner-Up at the CrewAI Fall Agentic AI Challenge.',
+      'Detects English documentation changes and auto-generates synchronised translations (Korean, Brazilian Portuguese) with no manual intervention.',
+      'Runs as a Git pre-push hook — fires before any feature branch push, prompting the developer to sync docs before code lands.',
+      'Agent-based architecture with specialised CrewAI agents for change detection, translation, and cross-branch synchronisation.',
+      'Minimal setup: Python 3.12+, uv, and an OpenAI key — clone + uv sync + one hook registration.',
+    ],
+  },
+  {
+    name: 'RLM-demo',
+    tagline: 'Full-stack interactive console for demonstrating and chatting with Reinforcement Learning models and agentic systems.',
+    github: 'https://github.com/Vidit-Ostwal/RLM-demo',
+    bullets: [
+      'Chat interface for real-time interaction with RL models, backed by smolagents for agent-based reasoning and step-by-step trace display.',
+      'FastAPI backend (Python 3.12+) paired with a Next.js 15 / React 19 frontend — clean separation of model logic and UI.',
+      'Integrates Hugging Face datasets directly; response caching via JSON files keeps repeated queries fast.',
+      'Docker-first production deployment — single container exposes the full stack on port 7860, ready for Hugging Face Spaces.',
+      'Environment-driven config (HF token, model name) makes swapping the underlying model a one-line change.',
+    ],
+  },
+];
+---
+
+<Layout title="Projects — Vidit Ostwal">
+<div class="page">
+
+  <div class="fade-in header">
+    <h1>Projects</h1>
+    <p class="sub">Things I've built.</p>
+  </div>
+
+  <div class="fade-in project-list">
+    {projects.map((p, i) => (
+      <div class={`project ${i > 0 ? 'bt' : ''}`}>
+        <div class="proj-header">
+          <div>
+            <span class="proj-name mono">{p.name}</span>
+            <p class="proj-tag">{p.tagline}</p>
+          </div>
+          <a href={p.github} target="_blank" rel="noopener" class="gh-link mono">GitHub →</a>
+        </div>
+        <ul class="bullets">
+          {p.bullets.map(b => <li>{b}</li>)}
+        </ul>
+      </div>
+    ))}
+  </div>
+
+</div>
+</Layout>
+
+<style>
+  .page { max-width: 680px; margin: 0 auto; padding: 7rem 1.5rem 4rem; }
+
+  .header { margin-bottom: 3rem; }
+  h1 { font-size: 1.9rem; font-weight: 600; letter-spacing: -0.025em; color: #111111; margin-bottom: 0.35rem; }
+  .sub { font-size: 0.88rem; color: #999999; }
+
+  .mono { font-family: "IBM Plex Mono", monospace; }
+
+  .project-list { border: 1px solid #e4e4e4; border-radius: 6px; overflow: hidden; }
+
+  .project { padding: 1.1rem; background: #ffffff; }
+  .bt { border-top: 1px solid #f0f0f0; }
+
+  .proj-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 0.85rem;
+    flex-wrap: wrap;
+  }
+
+  .proj-name { font-size: 0.88rem; font-weight: 500; color: #111111; display: block; margin-bottom: 0.25rem; }
+  .proj-tag  { font-size: 0.78rem; color: #555555; line-height: 1.5; margin: 0; }
+
+  .gh-link { font-size: 0.7rem; color: #999999; text-decoration: none; transition: color 0.15s; white-space: nowrap; padding-top: 0.15rem; flex-shrink: 0; }
+  .gh-link:hover { color: #111111; }
+
+  .bullets { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+  .bullets li {
+    font-size: 0.82rem;
+    color: #555555;
+    line-height: 1.65;
+    padding-left: 1.1rem;
+    position: relative;
+  }
+  .bullets li::before { content: '–'; position: absolute; left: 0; color: #cccccc; }
+</style>
