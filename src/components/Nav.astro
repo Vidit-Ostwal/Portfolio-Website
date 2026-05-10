@@ -18,7 +18,9 @@ const active = (route: string) => {
 
 <nav>
   <div class="inner">
-    <a href={withBase('/')} class="name">Vidit Ostwal</a>
+    <a href={withBase('/')} class="name" aria-label="Vidit Ostwal home">
+      <span class="brand">Vidit Ostwal</span>
+    </a>
     <div class="links">
       {links.map(l => (
         <a href={l.href} class={active(l.route) ? 'link on' : 'link'}>{l.label}</a>
@@ -46,13 +48,25 @@ const active = (route: string) => {
     justify-content: space-between;
   }
   .name {
-    font-size: 0.88rem;
-    font-weight: 500;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.68rem;
+    font-weight: 600;
     color: #111111;
     text-decoration: none;
-    text-transform: none;
-    font-family: "IBM Plex Sans", system-ui, sans-serif;
-    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .brand {
+    display: inline-block;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    font-variant: normal;
+    font-feature-settings:
+      'lnum' 1,
+      'kern' 1;
   }
   .links { display: flex; gap: 1.75rem; }
   .link {
