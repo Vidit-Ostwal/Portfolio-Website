@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import { withBase } from '../../lib/paths';
 import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
@@ -27,7 +28,7 @@ function formatDate(dateStr: string) {
 
     <!-- Back -->
     <a
-      href="/blog"
+      href={withBase('/blog')}
       style="display:inline-flex; align-items:center; gap:0.4rem; font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:#555; text-decoration:none; margin-bottom:2.5rem; transition:color 0.2s;"
       onmouseover="this.style.color='#4ade80';"
       onmouseout="this.style.color='#555';"
@@ -60,7 +61,7 @@ function formatDate(dateStr: string) {
     <!-- Footer -->
     <div style="margin-top:4rem; padding-top:2rem; border-top:1px solid #1e1e1e; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
       <a
-        href="/blog"
+        href={withBase('/blog')}
         style="font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:#555; text-decoration:none; transition:color 0.2s;"
         onmouseover="this.style.color='#4ade80';"
         onmouseout="this.style.color='#555';"

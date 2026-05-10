@@ -1,5 +1,12 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { withBase } from '../lib/paths';
+
+const navCards = [
+  { href: '/experience', label: 'Experience', desc: 'Where I\'ve worked' },
+  { href: '/projects', label: 'Projects', desc: 'What I\'ve built' },
+  { href: '/blog', label: 'Blog', desc: 'What I\'ve written' },
+].map((c) => ({ ...c, href: withBase(c.href) }));
 ---
 
 <Layout title="Vidit Ostwal" description="ML/AI Engineer building agentic AI systems and RL environments.">
@@ -50,7 +57,7 @@ import Layout from '../layouts/Layout.astro';
       </div>
     </div>
     <div class="photo">
-      <img src="/photo.jpg" alt="Vidit Ostwal" />
+      <img src={withBase('/photo.jpg')} alt="Vidit Ostwal" />
     </div>
   </section>
 
@@ -73,11 +80,7 @@ import Layout from '../layouts/Layout.astro';
   <section class="fade-in section">
     <h2 class="label mono">Pages</h2>
     <div class="nav-grid">
-      {[
-        { href: '/experience', label: 'Experience', desc: 'Where I\'ve worked' },
-        { href: '/projects',   label: 'Projects',   desc: 'What I\'ve built'  },
-        { href: '/blog',       label: 'Blog',        desc: 'What I\'ve written'},
-      ].map(c => (
+      {navCards.map((c) => (
         <a href={c.href} class="nav-card">
           <span class="nav-label">{c.label}</span>
           <span class="nav-desc">{c.desc}</span>

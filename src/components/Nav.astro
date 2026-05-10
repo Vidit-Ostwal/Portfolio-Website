@@ -1,20 +1,27 @@
 ---
-const links = [
-  { href: '/', label: 'home' },
-  { href: '/experience', label: 'experience' },
-  { href: '/projects', label: 'projects' },
-  { href: '/blog', label: 'blog' },
-];
-const path = Astro.url.pathname;
-const active = (href: string) => href === '/' ? path === '/' : path.startsWith(href);
+import { withBase } from '../lib/paths';
+
+const routes = ['/', '/experience', '/projects', '/blog'] as const;
+const links = routes.map((route) => ({
+  href: withBase(route),
+  route,
+  label: route === '/' ? 'home' : route.slice(1),
+}));
+const pathname = Astro.url.pathname;
+const active = (route: string) => {
+  const target = withBase(route).replace(/\/$/, '') || '/';
+  const cur = pathname.replace(/\/$/, '') || '/';
+  if (route === '/') return cur === target;
+  return cur === target || cur.startsWith(`${target}/`);
+};
 ---
 
 <nav>
   <div class="inner">
-    <a href="/" class="name">Vidit Ostwal</a>
+    <a href={withBase('/')} class="name">Vidit Ostwal</a>
     <div class="links">
       {links.map(l => (
-        <a href={l.href} class={active(l.href) ? 'link on' : 'link'}>{l.label}</a>
+        <a href={l.href} class={active(l.route) ? 'link on' : 'link'}>{l.label}</a>
       ))}
     </div>
   </div>
