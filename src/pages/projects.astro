@@ -1,14 +1,13 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { withBase } from '../lib/paths';
 
 type ShowcaseProject = {
   name: string;
   tagline: string;
   github: string;
   bullets: string[];
-  /** Public URL path, e.g. `/videos/foo.mp4` (file lives in `public/videos/foo.mp4`) */
-  launchVideo?: string;
+  liveLink?: string;
+  xPost?: string;
 };
 
 const projects: ShowcaseProject[] = [
@@ -16,7 +15,8 @@ const projects: ShowcaseProject[] = [
     name: 'Price Negotiation RL',
     tagline: 'RL environment where an LLM agent negotiates prices against an LLM-powered seller using real marketplace listings.',
     github: 'https://github.com/Vidit-Ostwal/price-negotiation-rl-OpenEnv',
-    launchVideo: '/videos/price-negotiation-launch.mp4',
+    liveLink: 'https://viditostwal-price-negotiation.hf.space/',
+    xPost: 'https://x.com/ViditOstwal/status/2052078129263571069',
     bullets: [
       'Three difficulty levels (Easy / Medium / Hard) with varying zones of possible agreement — from a $480 ZOPA down to no ZOPA, testing walk-away discipline.',
       'Six-component reward system on a [−1, 1] scale: surplus capture, walk-away correctness, output compliance, closing speed, opening offer quality, and concession smoothness.',
@@ -29,7 +29,8 @@ const projects: ShowcaseProject[] = [
     name: 'Maze Bench',
     tagline: 'Ice-sliding multi-player maze environment on OpenEnv for benchmarking planning and coordination in RL agents.',
     github: 'https://github.com/Vidit-Ostwal/Maze-Bench-OpenEnv',
-    launchVideo: '/videos/maze-bench-launch.mp4',
+    liveLink : 'viditostwal-maze-env.hf.space/web/',
+    xPost: 'https://x.com/ViditOstwal/status/2052373348706091170',
     bullets: [
       'Ice-sliding mechanics — agents slide until hitting a wall or another player, requiring multi-step lookahead over reactive movement.',
       'Simultaneous multi-player movement; solved only when every player reaches an exit cell in the same phase.',
@@ -42,7 +43,7 @@ const projects: ShowcaseProject[] = [
     name: 'MakeMyDocsBot',
     tagline: 'CrewAI-powered bot that auto-syncs multilingual documentation across feature branches via a Git pre-push hook.',
     github: 'https://github.com/Vidit-Ostwal/MakeMyDocsBot',
-    launchVideo: '/videos/building-makemydocsbot-launch.mp4',
+    xPost: 'https://x.com/ViditOstwal/status/1984629588887212078',
     bullets: [
       '2nd Runner-Up at the CrewAI Fall Agentic AI Challenge.',
       'Detects English documentation changes and auto-generates synchronised translations (Korean, Brazilian Portuguese) with no manual intervention.',
@@ -55,6 +56,8 @@ const projects: ShowcaseProject[] = [
     name: 'RLM Demo',
     tagline: 'Full-stack interactive console for demonstrating and chatting with Reinforcement Learning models and agentic systems.',
     github: 'https://github.com/Vidit-Ostwal/RLM-demo',
+    liveLink: 'https://huggingface.co/spaces/ViditOstwal/RLM-Interactive-Console',
+    xPost: 'https://x.com/ViditOstwal/status/2014769757434872304',
     bullets: [
       'Chat interface for real-time interaction with RL models, backed by smolagents for agent-based reasoning and step-by-step trace display.',
       'FastAPI backend (Python 3.12+) paired with a Next.js 15 / React 19 frontend — clean separation of model logic and UI.',
@@ -77,39 +80,37 @@ const projects: ShowcaseProject[] = [
   <div class="project-grid">
     {projects.map((p, i) => (
       <article class="fade-in project-card">
-        <div class="card-top">
-          <span class="proj-index mono">{String(i + 1).padStart(2, '0')}</span>
-          <div class="proj-meta">
-            <h2 class="proj-name">{p.name}</h2>
-            <p class="proj-tag">{p.tagline}</p>
-          </div>
-          <a href={p.github} target="_blank" rel="noopener" class="gh-link mono">
-            GitHub →
-          </a>
-        </div>
-
-        {p.launchVideo && (
-          <div class="video-section">
-            <button class="video-toggle mono" type="button" aria-expanded="false">
-              <span class="toggle-icon">▶</span>
-              <span>Launch video</span>
-            </button>
-            <div class="video-wrap" hidden>
-              <video
-                controls
-                playsinline
-                preload="metadata"
-                class="video-el"
-              >
-                <source src={withBase(p.launchVideo)} type="video/mp4" />
-              </video>
+        <div class="proj-header">
+              <h2 class="proj-name">{p.name}</h2>
+              <div class="proj-links">
+                <a href={p.github} target="_blank" rel="noopener" class="icon-link mono" aria-label="GitHub">
+                  <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                  </svg>
+                  <span class="link-label">GitHub</span>
+                </a>
+                {p.liveLink && (
+                  <a href={p.liveLink} target="_blank" rel="noopener" class="icon-link icon-link--live mono" aria-label="Live demo">
+                    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                      <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zM4.5 7.5a.5.5 0 0 1 0-1h5.793L8.146 4.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 7.5H4.5z"/>
+                    </svg>
+                    <span class="link-label">Live</span>
+                  </a>
+                )}
+                {p.xPost && (
+                  <a href={p.xPost} target="_blank" rel="noopener" class="icon-link icon-link--x mono" aria-label="X launch post">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.259 5.631zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                    <span class="link-label">Launch</span>
+                  </a>
+                )}
+              </div>
             </div>
-          </div>
-        )}
-
-        <ul class="bullets">
-          {p.bullets.map(b => <li>{b}</li>)}
-        </ul>
+            <p class="proj-tag">{p.tagline}</p>
+            <ul class="bullets">
+              {p.bullets.map(b => <li>{b}</li>)}
+            </ul>
       </article>
     ))}
   </div>
@@ -126,7 +127,6 @@ const projects: ShowcaseProject[] = [
 
   .mono { font-family: "IBM Plex Mono", monospace; }
 
-  /* Grid: each project is a distinct card */
   .project-grid {
     display: flex;
     flex-direction: column;
@@ -144,101 +144,78 @@ const projects: ShowcaseProject[] = [
     border-color: #c8c8c8;
   }
 
-  /* Card header row */
-  .card-top {
+  /* Name row: title left, icon links right */
+  .proj-header {
     display: flex;
-    align-items: flex-start;
-    gap: 0.9rem;
-    margin-bottom: 1rem;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.3rem;
   }
-
-  .proj-index {
-    font-size: 0.62rem;
-    color: #999999;
-    letter-spacing: 0.04em;
-    padding-top: 0.22rem;
-    flex-shrink: 0;
-    min-width: 1.5rem;
-    line-height: 1;
-  }
-
-  .proj-meta { flex: 1; min-width: 0; }
 
   .proj-name {
-    font-size: 0.92rem;
+    flex: 1;
+    min-width: 0;
+    font-size: 0.9rem;
     font-weight: 600;
     color: #111111;
     letter-spacing: -0.01em;
-    margin-bottom: 0.28rem;
     line-height: 1.25;
+    margin: 0;
+  }
+
+  .proj-links {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-shrink: 0;
+  }
+
+  .icon-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #d0d0d0;
+    font-size: 0.62rem;
+    letter-spacing: 0.02em;
+    color: #444444;
+    background: #f5f5f5;
+    text-decoration: none;
+    transition: color 0.15s, background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+  }
+  .icon-link:hover {
+    color: #111111;
+    background: #ebebeb;
+    border-color: #b0b0b0;
+  }
+  .icon-link--live:hover {
+    color: #1a6b3a;
+    border-color: #1a6b3a;
+    background: #f0f7f3;
+  }
+  .icon-link--x:hover {
+    color: #000000;
+    border-color: #000000;
+  }
+  .icon-link svg {
+    width: 0.72rem;
+    height: 0.72rem;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 480px) {
+    .link-label { display: none; }
+    .icon-link { padding: 0.25rem; }
+    .icon-link svg { width: 0.85rem; height: 0.85rem; }
   }
 
   .proj-tag {
     font-size: 0.79rem;
     color: #666666;
     line-height: 1.55;
-    margin: 0;
-  }
-
-  .gh-link {
-    font-size: 0.68rem;
-    color: #aaaaaa;
-    text-decoration: none;
-    transition: color 0.15s;
-    white-space: nowrap;
-    flex-shrink: 0;
-    padding-top: 0.2rem;
-  }
-  .gh-link:hover { color: #111111; }
-
-  /* Launch video toggle */
-  .video-section { margin-bottom: 1rem; }
-
-  .video-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: #f7f7f7;
-    border: 1px solid #e4e4e4;
-    border-radius: 4px;
-    padding: 0.3rem 0.7rem;
-    font-size: 0.66rem;
-    color: #777777;
-    letter-spacing: 0.04em;
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
-  }
-  .video-toggle:hover {
-    background: #efefef;
-    color: #111111;
-    border-color: #c8c8c8;
-  }
-  .video-toggle[aria-expanded="true"] {
-    color: #111111;
-    border-color: #c8c8c8;
-    background: #f0f0f0;
-  }
-
-  .toggle-icon {
-    font-size: 0.5rem;
-    display: inline-block;
-    transition: transform 0.2s ease;
-    line-height: 1;
-  }
-  .video-toggle[aria-expanded="true"] .toggle-icon {
-    transform: rotate(90deg);
-  }
-
-  .video-wrap { margin-top: 0.7rem; }
-  .video-wrap[hidden] { display: none; }
-
-  .video-el {
-    width: 100%;
-    max-height: 340px;
-    border-radius: 6px;
-    border: 1px solid #e4e4e4;
-    background: #f7f7f7;
-    display: block;
+    margin: 0 0 0.85rem;
   }
 
   /* Bullets */
@@ -246,13 +223,15 @@ const projects: ShowcaseProject[] = [
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 0.45rem;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
   }
   .bullets li {
-    font-size: 0.81rem;
+    font-size: 0.8rem;
     color: #555555;
     line-height: 1.65;
-    padding-left: 1.1rem;
+    padding-left: 1rem;
     position: relative;
   }
   .bullets li::before {
@@ -263,20 +242,3 @@ const projects: ShowcaseProject[] = [
   }
 </style>
 
-<script>
-  document.querySelectorAll<HTMLButtonElement>('.video-toggle').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const section = btn.closest('.video-section');
-      const wrap = section?.querySelector<HTMLElement>('.video-wrap');
-      if (!wrap) return;
-
-      const opening = wrap.hidden;
-      wrap.hidden = !opening;
-      btn.setAttribute('aria-expanded', opening ? 'true' : 'false');
-
-      if (!opening) {
-        wrap.querySelector('video')?.pause();
-      }
-    });
-  });
-</script>
