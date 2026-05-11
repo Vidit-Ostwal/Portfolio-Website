@@ -233,5 +233,18 @@ const projects: ShowcaseProject[] = [
     left: 0;
     color: #cccccc;
   }
+
+  :global([data-theme="dark"]) h1 { color: #e8e8e8; }
+  :global([data-theme="dark"]) .sub { color: #555555; }
+  :global([data-theme="dark"]) .project-card { background: #1a1a1a; border-color: #2a2a2a; }
+  :global([data-theme="dark"]) .project-card:hover { border-color: #484848; }
+  :global([data-theme="dark"]) .proj-name { color: #e0e0e0; }
+  :global([data-theme="dark"]) .icon-link { color: #808080; background: #222222; border-color: #333333; }
+  :global([data-theme="dark"]) .icon-link:hover,
+  :global([data-theme="dark"]) .icon-link--live:hover,
+  :global([data-theme="dark"]) .icon-link--x:hover { color: #d8d8d8; background: #2a2a2a; border-color: #505050; }
+  :global([data-theme="dark"]) .proj-tag { color: #808080; }
+  :global([data-theme="dark"]) .bullets li { color: #909090; }
+  :global([data-theme="dark"]) .bullets li::before { color: #3a3a3a; }
 </style>
 
