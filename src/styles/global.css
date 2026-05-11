@@ -11,6 +11,7 @@
   }
 
   html {
+    min-height: 100%;
     background: var(--bg);
     color: var(--text);
     font-family: "IBM Plex Sans", system-ui, sans-serif;
@@ -18,6 +19,32 @@
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     scroll-behavior: smooth;
+  }
+
+  /*
+   Sticky footer: `.page-shell` (Layout) stretches so <main> grows and the footer sits
+   at the bottom on short pages, instead of a long empty strip below the copyright.
+   */
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  body > .page-shell {
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  body > .page-shell > main {
+    flex: 1 0 auto;
+  }
+
+  body > .page-shell > footer {
+    flex-shrink: 0;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }

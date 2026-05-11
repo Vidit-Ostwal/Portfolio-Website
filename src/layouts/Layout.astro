@@ -44,14 +44,16 @@ function iconUrl(rel: string): string {
   </head>
   <body>
     <Nav />
-    <main>
-      <slot />
-    </main>
-    <footer>
-      <div class="wrap">
-        <span>© {new Date().getFullYear()} Vidit Ostwal</span>
-      </div>
-    </footer>
+    <div class="page-shell">
+      <main>
+        <slot />
+      </main>
+      <footer>
+        <div class="wrap">
+          <span>© {new Date().getFullYear()} Vidit Ostwal</span>
+        </div>
+      </footer>
+    </div>
     <script>
       const io = new IntersectionObserver(
         (es) => es.forEach((e) => e.isIntersecting && e.target.classList.add('visible')),
@@ -65,8 +67,8 @@ function iconUrl(rel: string): string {
 <style>
   footer {
     border-top: 1px solid var(--border);
-    padding: 0.65rem 0 0.8rem;
-    margin-top: 2rem;
+    padding: 0.45rem 0 0.55rem;
+    margin-top: 1.25rem;
   }
   .wrap {
     max-width: 320px;
