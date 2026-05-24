@@ -12,6 +12,18 @@ type ShowcaseProject = {
 
 const projects: ShowcaseProject[] = [
   {
+    name: 'Understanding Prime Env Skill',
+    tagline:
+      'Skill and installer that produce a rich, self-contained HTML report explaining any Prime Intellect verifiers environment.',
+    github: 'https://github.com/Vidit-Ostwal/Understanding-prime-env',
+    xPost: 'https://x.com/ViditOstwal/status/2058570288993042477',
+    bullets: [
+      'Walks the environment source and emits environment_overview.html—dataset and task samples, every reward/metric with weights and scoring range, rollout logic from prompt to final score, and a full config reference.',
+      'Ships as an npm CLI (npx understanding-prime-env) with interactive setup plus flags for Claude Code, Cursor, Windsurf, GitHub Copilot, Zed, or all tools in one go.',
+      'Meant to be used from inside a verifiers env folder so you can ask your assistant to “explain this environment” and get an overview styled to match the Prime Intellect platform.',
+    ],
+  },
+  {
     name: 'Price Negotiation RL',
     tagline: 'RL environment where an LLM agent negotiates prices against an LLM-powered seller using real marketplace listings.',
     github: 'https://github.com/Vidit-Ostwal/price-negotiation-rl-OpenEnv',
