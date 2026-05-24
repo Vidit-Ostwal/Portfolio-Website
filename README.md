@@ -1,6 +1,6 @@
 # Portfolio
 
-Personal site (Astro). Live at [viditostwal.github.io](https://viditostwal.github.io).
+Personal site (Astro). Live at [vidit-ostwal.github.io](https://vidit-ostwal.github.io/).
 
 ```bash
 npm install
