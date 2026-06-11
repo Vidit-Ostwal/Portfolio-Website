@@ -12,6 +12,11 @@ const { title: pageTitle, description = 'ML/AI Engineer — Vidit Ostwal' } = As
 
 const tabTitle = 'Vidit-Ostwal';
 
+/** ISO date from CI (git commit on deploy) or local build time. Baked in at `astro build`. */
+const lastUpdated = new Date(
+  import.meta.env.PUBLIC_SITE_UPDATED || Date.now()
+).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
 /** Absolute icon URL for production (Safari / some clients ignore relative SVG); falls back to base path in dev. */
 function iconUrl(rel: string): string {
   const path = rel.startsWith('/') ? rel.slice(1) : rel;
@@ -58,6 +63,7 @@ function iconUrl(rel: string): string {
       <footer>
         <div class="wrap">
           <span>© {new Date().getFullYear()} Vidit Ostwal</span>
+          <span class="updated">updated {lastUpdated}</span>
         </div>
       </footer>
     </div>
@@ -81,8 +87,15 @@ function iconUrl(rel: string): string {
     max-width: 320px;
     margin: 0 auto;
     padding: 0 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
     font-family: "IBM Plex Mono", monospace;
     font-size: 0.72rem;
+    color: var(--text-3);
+  }
+  .updated {
     color: var(--text-3);
   }
 </style>

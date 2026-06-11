@@ -6,16 +6,31 @@ type ShowcaseProject = {
   tagline: string;
   github: string;
   bullets: string[];
+  /** Month + year, e.g. "Jun 2026". */
+  made?: string;
   liveLink?: string;
   xPost?: string;
 };
 
 const projects: ShowcaseProject[] = [
   {
+    name: 'Automatic UI Fixing Harness',
+    tagline:
+      'Black-box UI defect discovery for locally hosted web apps — Playwright exploration, LLM-assisted goals and verification, and an HTML findings report.',
+    github: 'https://github.com/Vidit-Ostwal/Automatic-UI-Fixing-Harness',
+    made: 'Jun 2026',
+    bullets: [
+      'Four-phase pipeline: BFS exploration in a real browser → LLM converts paths into plain-English test goals → parallel goal-driven executors → per-step LLM verifier that emits structured findings.',
+      'Executors resolve instructions at runtime instead of replaying raw trajectories — app-agnostic design with Docker lifecycle management, DOM heuristics, and crash-detection fallbacks when the LLM is off.',
+      'Single CLI (run_harness.py) with composable modes — full pipeline, planner-only, run-goals, multi-pass rollout, and report-only — default target is a buggy Memos Docker image, but the harness generalizes to any local web app.',
+    ],
+  },
+  {
     name: 'Understanding Prime Env Skill',
     tagline:
       'Skill and installer that produce a rich, self-contained HTML report explaining any Prime Intellect verifiers environment.',
     github: 'https://github.com/Vidit-Ostwal/Understanding-prime-env',
+    made: 'May 2026',
     liveLink: 'https://www.npmjs.com/package/understanding-prime-env',
     xPost: 'https://x.com/ViditOstwal/status/2058570288993042477',
     bullets: [
@@ -28,6 +43,7 @@ const projects: ShowcaseProject[] = [
     name: 'Price Negotiation RL',
     tagline: 'RL environment where an LLM agent negotiates prices against an LLM-powered seller using real marketplace listings.',
     github: 'https://github.com/Vidit-Ostwal/price-negotiation-rl-OpenEnv',
+    made: 'Mar 2026',
     liveLink: 'https://viditostwal-price-negotiation.hf.space/',
     xPost: 'https://x.com/ViditOstwal/status/2052078129263571069',
     bullets: [
@@ -42,6 +58,7 @@ const projects: ShowcaseProject[] = [
     name: 'Maze Bench',
     tagline: 'Ice-sliding multi-player maze environment on OpenEnv for benchmarking planning and coordination in RL agents.',
     github: 'https://github.com/Vidit-Ostwal/Maze-Bench-OpenEnv',
+    made: 'Apr 2026',
     liveLink : 'https://viditostwal-maze-env.hf.space/web/',
     xPost: 'https://x.com/ViditOstwal/status/2052373348706091170',
     bullets: [
@@ -56,6 +73,7 @@ const projects: ShowcaseProject[] = [
     name: 'MakeMyDocsBot',
     tagline: 'CrewAI-powered bot that auto-syncs multilingual documentation across feature branches via a Git pre-push hook.',
     github: 'https://github.com/Vidit-Ostwal/MakeMyDocsBot',
+    made: 'Oct 2025',
     xPost: 'https://x.com/ViditOstwal/status/1984629588887212078',
     bullets: [
       '2nd Runner-Up at the CrewAI Fall Agentic AI Challenge.',
@@ -69,6 +87,7 @@ const projects: ShowcaseProject[] = [
     name: 'RLM Demo',
     tagline: 'Full-stack interactive console for demonstrating and chatting with Reinforcement Learning models and agentic systems.',
     github: 'https://github.com/Vidit-Ostwal/RLM-demo',
+    made: 'Jan 2026',
     liveLink: 'https://huggingface.co/spaces/ViditOstwal/RLM-Interactive-Console',
     xPost: 'https://x.com/ViditOstwal/status/2014769757434872304',
     bullets: [
@@ -94,7 +113,10 @@ const projects: ShowcaseProject[] = [
     {projects.map((p, i) => (
       <article class="fade-in project-card">
         <div class="proj-header">
-              <h2 class="proj-name">{p.name}</h2>
+              <div class="proj-title">
+                <h2 class="proj-name">{p.name}</h2>
+                {p.made && <p class="proj-made mono">{p.made}</p>}
+              </div>
               <div class="proj-links">
                 <a href={p.github} target="_blank" rel="noopener" class="icon-link mono" aria-label="GitHub">
                   <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
@@ -165,14 +187,27 @@ const projects: ShowcaseProject[] = [
     margin-bottom: 0.3rem;
   }
 
-  .proj-name {
+  .proj-title {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+  }
+
+  .proj-name {
     font-size: 0.9rem;
     font-weight: 600;
     color: #111111;
     letter-spacing: -0.01em;
     line-height: 1.25;
+    margin: 0;
+  }
+
+  .proj-made {
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+    color: #aaaaaa;
     margin: 0;
   }
 
@@ -252,6 +287,7 @@ const projects: ShowcaseProject[] = [
   :global([data-theme="dark"]) .project-card { background: #1a1a1a; border-color: #2a2a2a; }
   :global([data-theme="dark"]) .project-card:hover { border-color: #484848; }
   :global([data-theme="dark"]) .proj-name { color: #e0e0e0; }
+  :global([data-theme="dark"]) .proj-made { color: #555555; }
   :global([data-theme="dark"]) .icon-link { color: #808080; background: #222222; border-color: #333333; }
   :global([data-theme="dark"]) .icon-link:hover,
   :global([data-theme="dark"]) .icon-link--live:hover,
