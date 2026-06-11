@@ -84,18 +84,21 @@ function iconUrl(rel: string): string {
     margin-top: 1.25rem;
   }
   .wrap {
-    max-width: 320px;
+    max-width: 680px;
     margin: 0 auto;
     padding: 0 1.5rem;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: 0.15rem;
+    justify-content: space-between;
+    gap: 1rem;
     font-family: "IBM Plex Mono", monospace;
     font-size: 0.72rem;
     color: var(--text-3);
   }
   .updated {
+    flex-shrink: 0;
+    white-space: nowrap;
     color: var(--text-3);
   }
 </style>
