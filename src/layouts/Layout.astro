@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import ChatResumeFab from '../components/ChatResumeFab.astro';
 import Nav from '../components/Nav.astro';
 import { withBase } from '../lib/paths';
 
@@ -57,6 +58,7 @@ function iconUrl(rel: string): string {
   </head>
   <body>
     <Nav />
+    <ChatResumeFab />
     <div class="page-shell">
       <main>
         <slot />
