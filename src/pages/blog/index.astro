@@ -27,7 +27,7 @@ function fmtDate(d: string) {
         <h2 class="cat-label mono">{cat}</h2>
         <div class="post-list">
           {byCategory[cat].map((post, i) => (
-            <a href={post.url} target="_blank" rel="noopener" class={`post-row ${i > 0 ? 'bt' : ''}`}>
+            <a href={post.url} {...(post.url.startsWith('http') ? { target: '_blank', rel: 'noopener' } : {})} class={`post-row ${i > 0 ? 'bt' : ''}`}>
               <div class="post-left">
                 <p class="post-title">{post.title}</p>
                 {post.summary && <p class="post-summary">{post.summary}</p>}

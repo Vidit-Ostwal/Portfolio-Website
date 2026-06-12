@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KL Divergence — Made Visual</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --color-bg: #ffffff;
+    --color-bg2: #f5f5f3;
+    --color-bg3: #eeede9;
+    --color-text: #1a1a1a;
+    --color-text2: #555550;
+    --color-text3: #999990;
+    --color-border: rgba(0,0,0,0.12);
+    --color-border2: rgba(0,0,0,0.22);
+    --font-sans: system-ui, -apple-system, sans-serif;
+    --font-mono: ui-monospace, monospace;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-bg: #1a1a1a;
+      --color-bg2: #242424;
+      --color-bg3: #2e2e2e;
+      --color-text: #f0f0ee;
+      --color-text2: #aaaaaa;
+      --color-text3: #666660;
+      --color-border: rgba(255,255,255,0.1);
+      --color-border2: rgba(255,255,255,0.2);
+    }
+  }
+  body { font-family: var(--font-sans); color: var(--color-text); background: var(--color-bg); line-height: 1.7; }
+  .blog { max-width: 680px; margin: 0 auto; padding: 2rem 1.25rem 5rem; }
+  .hero { text-align: center; padding: 3.5rem 0 2.5rem; }
+  .hero-tag { font-size: 12px; font-weight: 500; letter-spacing: 0.08em; color: var(--color-text3); text-transform: uppercase; margin-bottom: 1rem; }
+  .hero h1 { font-size: 38px; font-weight: 500; line-height: 1.15; margin-bottom: 1rem; }
+  .hero .sub { font-size: 18px; color: var(--color-text2); line-height: 1.6; }
+  .section { margin: 3rem 0; }
+  .section-label { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-text3); margin-bottom: 0.4rem; }
+  h2 { font-size: 22px; font-weight: 500; margin-bottom: 0.9rem; color: var(--color-text); }
+  h3 { font-size: 17px; font-weight: 500; margin-bottom: 0.6rem; color: var(--color-text); }
+  p { font-size: 16px; line-height: 1.7; color: var(--color-text2); margin-bottom: 0.9rem; }
+  p strong { color: var(--color-text); font-weight: 500; }
+  hr.divider { border: none; border-top: 0.5px solid var(--color-border); margin: 2.5rem 0; }
+  .callout { background: var(--color-bg2); border-left: 3px solid #7F77DD; border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: 1rem 1.25rem; margin: 1.5rem 0; }
+  .callout p { margin: 0; font-size: 15px; }
+  .formula-box { background: var(--color-bg2); border: 0.5px solid var(--color-border2); border-radius: var(--radius-lg); padding: 1.5rem; text-align: center; margin: 1.5rem 0; }
+  .formula { font-family: var(--font-mono); font-size: 18px; color: var(--color-text); }
+  .formula-sub { font-size: 13px; color: var(--color-text2); margin-top: 0.5rem; }
+  canvas { display: block; width: 100%; }
+  .anim-canvas-wrap { background: var(--color-bg2); border-radius: var(--radius-lg); padding: 1rem; margin: 1.5rem 0; }
+  .controls { display: flex; align-items: center; gap: 12px; margin: 0.75rem 0; flex-wrap: wrap; }
+  .ctrl-label { font-size: 13px; color: var(--color-text2); min-width: 110px; }
+  .ctrl-val { font-size: 13px; font-weight: 500; min-width: 40px; color: var(--color-text); }
+  input[type=range] { flex: 1; min-width: 120px; accent-color: #7F77DD; }
+  .table-wrap { overflow-x: auto; margin: 1.5rem 0; border: 0.5px solid var(--color-border); border-radius: var(--radius-lg); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; padding: 10px 14px; font-weight: 500; font-size: 13px; color: var(--color-text2); border-bottom: 0.5px solid var(--color-border2); background: var(--color-bg2); }
+  td { padding: 10px 14px; border-bottom: 0.5px solid var(--color-border); color: var(--color-text); }
+  .td-num { font-family: var(--font-mono); font-size: 13px; }
+  .td-highlight { font-weight: 500; color: #534AB7; }
+  tr.total-row td { font-weight: 500; border-top: 1px solid var(--color-border2); border-bottom: none; padding-top: 14px; background: var(--color-bg2); }
+  .kl-result { text-align: center; padding: 1.5rem; background: var(--color-bg2); border-radius: var(--radius-lg); margin: 1rem 0; border: 0.5px solid var(--color-border); }
+  .kl-big { font-size: 42px; font-weight: 500; color: #534AB7; }
+  .kl-label { font-size: 14px; color: var(--color-text2); margin-top: 4px; }
+  .token-scene { margin: 1.5rem 0; }
+  .sentence-box { background: var(--color-bg2); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; font-size: 16px; line-height: 2.4; letter-spacing: 0.01em; border: 0.5px solid var(--color-border); }
+  .token { display: inline-block; padding: 3px 10px; border-radius: 6px; margin: 2px; cursor: pointer; transition: all 0.18s; border: 0.5px solid transparent; font-family: var(--font-mono); font-size: 14px; }
+  .token.student-tok { background: #E1F5EE; color: #085041; border-color: #5DCAA5; }
+  .token.active { transform: scale(1.14); box-shadow: 0 3px 10px rgba(0,0,0,0.14); }
+  .dist-bars { display: flex; gap: 8px; margin: 0.75rem 0; align-items: flex-end; height: 110px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .bar-fill { width: 100%; border-radius: 4px 4px 0 0; transition: height 0.35s ease; min-height: 2px; }
+  .bar-tok { font-size: 10px; font-family: var(--font-mono); color: var(--color-text2); text-align: center; word-break: break-all; }
+  .bar-pct { font-size: 10px; font-weight: 500; text-align: center; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+  .dist-card { background: var(--color-bg2); border-radius: var(--radius-lg); padding: 1rem; border: 0.5px solid var(--color-border); }
+  .dist-card-title { font-size: 13px; font-weight: 500; margin-bottom: 0.6rem; display: flex; align-items: center; gap: 6px; color: var(--color-text); }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .ppo-box { background: var(--color-bg2); border: 0.5px solid var(--color-border2); border-radius: var(--radius-lg); padding: 1.25rem; margin: 1rem 0; }
+  .ppo-models { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 1rem 0; flex-wrap: wrap; }
+  .model-card { flex: 1; min-width: 130px; background: var(--color-bg); border: 0.5px solid var(--color-border2); border-radius: var(--radius-md); padding: 1rem; text-align: center; }
+  .model-name { font-size: 14px; font-weight: 500; color: var(--color-text); }
+  .model-sub { font-size: 12px; color: var(--color-text2); margin-top: 5px; line-height: 1.5; }
+  .arrow-mid { font-size: 20px; color: var(--color-text3); align-self: center; white-space: nowrap; }
+  .reverse-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
+  .rev-card { border-radius: var(--radius-lg); padding: 1.25rem; }
+  .rev-card.forward { background: #EEEDFE; border: 0.5px solid #AFA9EC; }
+  .rev-card.reverse { background: #E1F5EE; border: 0.5px solid #5DCAA5; }
+  .rev-card h4 { font-size: 14px; font-weight: 500; margin-bottom: 0.5rem; }
+  .rev-card p { font-size: 13px; margin: 0; line-height: 1.6; }
+  .rev-card.forward h4 { color: #3C3489; }
+  .rev-card.reverse h4 { color: #085041; }
+  .rev-card.forward p { color: #534AB7; }
+  .rev-card.reverse p { color: #0F6E56; }
+  .play-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-md); background: #EEEDFE; color: #3C3489; font-size: 14px; font-weight: 500; border: 0.5px solid #AFA9EC; cursor: pointer; transition: all 0.18s; }
+  .play-btn:hover { background: #CECBF6; }
+  .recap-item { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 0.75rem; }
+  .recap-emoji { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+  .recap-text { font-size: 16px; color: var(--color-text2); line-height: 1.6; }
+  .recap-text strong { color: var(--color-text); font-weight: 500; }
+  #klModeExplain { font-size: 14px; color: var(--color-text2); margin-top: 0.75rem; min-height: 44px; line-height: 1.6; }
+  @media (max-width: 500px) {
+    .two-col, .reverse-compare { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 28px; }
+    .formula { font-size: 14px; }
+    .ppo-models { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="blog">
+
+  <div class="hero">
+    <div class="hero-tag">10 min read · ML fundamentals</div>
+    <h1>KL Divergence<br>made visual</h1>
+    <p class="sub">No scary math. Just two distributions,<br>and how far apart they are.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Section 1 -->
+  <div class="section">
+    <div class="section-label">01 — the big idea</div>
+    <h2>What even is a distribution?</h2>
+    <p>Before KL Loss, let's get comfortable with distributions. A <strong>probability distribution</strong> tells you how likely each outcome is. Think of it as a "belief" about what will happen.</p>
+    <p>Below are two distributions — <strong>P</strong> (the true one) and <strong>Q</strong> (our guess). Drag the sliders and watch them shift.</p>
+
+    <div class="anim-canvas-wrap">
+      <canvas id="distCanvas" height="200"></canvas>
+      <div class="controls">
+        <span class="ctrl-label">P peak position</span>
+        <input type="range" min="0" max="100" value="35" id="pPeak" step="1">
+        <span class="ctrl-val" id="pPeakVal">35%</span>
+      </div>
+      <div class="controls">
+        <span class="ctrl-label">Q peak position</span>
+        <input type="range" min="0" max="100" value="65" id="qPeak" step="1">
+        <span class="ctrl-val" id="qPeakVal">65%</span>
+      </div>
+    </div>
+
+    <div class="callout">
+      <p>When P and Q overlap perfectly, they're identical. When they drift apart — that gap is exactly what KL divergence measures.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Section 2 -->
+  <div class="section">
+    <div class="section-label">02 — the formula</div>
+    <h2>What KL divergence actually measures</h2>
+    <p>KL divergence answers this question: <strong>"How much extra information do I waste if I use Q to describe a world that's actually P?"</strong></p>
+
+    <div class="formula-box">
+      <div class="formula">KL(P ∥ Q) = Σ P(x) · log( P(x) / Q(x) )</div>
+      <div class="formula-sub">Sum over all outcomes x. P is truth, Q is our approximation.</div>
+    </div>
+
+    <p>Three things to notice:</p>
+    <p>① It's <strong>not symmetric</strong> — KL(P∥Q) ≠ KL(Q∥P). Direction matters.<br>
+       ② It's always <strong>≥ 0</strong>. Zero means the distributions are identical.<br>
+       ③ The <strong>log ratio</strong> captures surprise — when Q says something is rare but P says it's common, that's expensive.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Section 3 -->
+  <div class="section">
+    <div class="section-label">03 — live calculation</div>
+    <h2>Let's compute it ourselves</h2>
+    <p>Imagine three outcomes: 🌧️ Rain, ☀️ Sunny, 🌫️ Cloudy. P is the actual weather, Q is a forecast app.</p>
+
+    <div class="controls">
+      <span class="ctrl-label">Rain (P)</span>
+      <input type="range" min="5" max="85" value="50" id="p0" step="5">
+      <span class="ctrl-val" id="p0val">50%</span>
+    </div>
+    <div class="controls">
+      <span class="ctrl-label">Rain (Q)</span>
+      <input type="range" min="5" max="85" value="20" id="q0" step="5">
+      <span class="ctrl-val" id="q0val">20%</span>
+    </div>
+    <div class="controls" style="margin-bottom:1rem">
+      <span class="ctrl-label">Sunny split</span>
+      <input type="range" min="10" max="80" value="50" id="split" step="5">
+      <span class="ctrl-val" id="splitval">50%</span>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Outcome</th>
+            <th>P (truth)</th>
+            <th>Q (forecast)</th>
+            <th>log(P/Q)</th>
+            <th>P · log(P/Q)</th>
+          </tr>
+        </thead>
+        <tbody id="klTableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="kl-result">
+      <div class="kl-big" id="klResult">—</div>
+      <div class="kl-label">KL(P ∥ Q) in nats</div>
+    </div>
+
+    <div class="callout">
+      <p>Notice: as the distributions align (overlap perfectly), the KL result approaches <strong>0</strong>. The farther apart they are, the higher the penalty.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Section 4 -->
+  <div class="section">
+    <div class="section-label">04 — in the wild: LLMs</div>
+    <h2>Where does this show up in AI?</h2>
+    <p>When training a language model with <strong>PPO (Reinforcement Learning from Human Feedback)</strong>, we want the new model to improve — but not drift too far from the original. KL divergence is the leash.</p>
+
+    <div class="ppo-box">
+      <div class="ppo-models">
+        <div class="model-card">
+          <div class="model-name">📦 Parent model</div>
+          <div class="model-sub">Original pretrained LLM<br>Distribution = P</div>
+        </div>
+        <div class="arrow-mid">→ fine-tune →</div>
+        <div class="model-card">
+          <div class="model-name">🎯 Student model</div>
+          <div class="model-sub">Fine-tuned version<br>Distribution = Q</div>
+        </div>
+      </div>
+      <p style="font-size:14px; color:var(--color-text2); margin:0">
+        PPO loss = reward signal <span style="color:#534AB7; font-weight:500">− β · KL(Q ∥ P)</span><br>
+        The KL term punishes the student for straying too far from the parent.
+      </p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Section 5 -->
+  <div class="section">
+    <div class="section-label">05 — token by token</div>
+    <h2>A real example: "What is the capital of France?"</h2>
+    <p>The student replies: <em>"The capital of France is Paris"</em>. Each token gets its own probability from both models. Click a token to see how the distributions compare.</p>
+
+    <div class="token-scene">
+      <div class="sentence-box" id="tokenSentence"></div>
+    </div>
+
+    <div id="tokenDetail" style="display:none; margin-top:1rem">
+      <h3 id="tokenTitle"></h3>
+      <p id="tokenDesc" style="font-size:14px; margin-top:0.4rem"></p>
+      <div class="two-col">
+        <div class="dist-card">
+          <div class="dist-card-title">
+            <span class="dot" style="background:#7F77DD"></span> Parent model (P)
+          </div>
+          <div class="dist-bars" id="parentBars"></div>
+        </div>
+        <div class="dist-card">
+          <div class="dist-card-title">
+            <span class="dot" style="background:#1D9E75"></span> Student model (Q)
+          </div>
+          <div class="dist-bars" id="studentBars"></div>
+        </div>
+      </div>
+      <div class="kl-result" style="margin-top:0.5rem">
+        <div class="kl-big" id="tokenKL">—</div>
+        <div class="kl-label">KL contribution for this token</div>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top:1.5rem">
+      <p>In practice, we only measure KL loss on the <strong>tokens the student actually generates</strong> — not the entire vocabulary. This is the "sample KL" approximation used in real training pipelines.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Section 6 -->
+  <div class="section">
+    <div class="section-label">06 — forward vs reverse</div>
+    <h2>KL(P∥Q) vs KL(Q∥P) — does direction matter?</h2>
+    <p>Yes — a lot. They measure different things and lead to different model behaviors.</p>
+
+    <div class="reverse-compare">
+      <div class="rev-card forward">
+        <h4>Forward KL(P ∥ Q)</h4>
+        <p>Penalizes Q for putting low probability where P puts high probability. Q tries to <strong>cover all modes</strong> of P — even if it spreads too thin.</p>
+      </div>
+      <div class="rev-card reverse">
+        <h4>Reverse KL(Q ∥ P)</h4>
+        <p>Penalizes Q for putting high probability where P puts low probability. Q <strong>picks one mode and sharpens</strong> onto it — mode-seeking behavior.</p>
+      </div>
+    </div>
+
+    <p>The <strong>On-Policy Self-Distillation</strong> method uses reverse KL. The student model generates outputs, then is trained to match its own good generations — making it sharper and more confident rather than spreading probability everywhere.</p>
+
+    <div class="anim-canvas-wrap">
+      <canvas id="reverseCanvas" height="200"></canvas>
+      <div style="display:flex; gap:0.75rem; margin-top:0.75rem; flex-wrap:wrap">
+        <button class="play-btn" onclick="showKLMode('forward')">
+          <i class="ti ti-arrow-right" aria-hidden="true"></i> Forward KL
+        </button>
+        <button class="play-btn" onclick="showKLMode('reverse')">
+          <i class="ti ti-arrow-left" aria-hidden="true"></i> Reverse KL
+        </button>
+      </div>
+      <div id="klModeExplain"></div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Recap -->
+  <div class="section">
+    <div class="section-label">recap</div>
+    <h2>The 30-second summary</h2>
+    <div class="recap-item">
+      <span class="recap-emoji">🔵</span>
+      <span class="recap-text"><strong>KL divergence</strong> measures how different distribution Q is from distribution P.</span>
+    </div>
+    <div class="recap-item">
+      <span class="recap-emoji">📐</span>
+      <span class="recap-text"><strong>KL(P∥Q) = Σ P(x) · log(P/Q)</strong> — always non-negative, zero when identical.</span>
+    </div>
+    <div class="recap-item">
+      <span class="recap-emoji">🤖</span>
+      <span class="recap-text"><strong>In LLMs (PPO)</strong>, it keeps the student model from drifting too far from the parent.</span>
+    </div>
+    <div class="recap-item">
+      <span class="recap-emoji">🔄</span>
+      <span class="recap-text"><strong>Reverse KL</strong> is used in self-distillation for sharper, mode-seeking behavior.</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ── Token data ── */
+const tokenData = [
+  { text: "The", desc: "A very common starting word. Both models agree strongly here.", parent: [{t:"The",p:0.72},{t:"A",p:0.15},{t:"Paris",p:0.08},{t:"France",p:0.05}], student: [{t:"The",p:0.68},{t:"A",p:0.18},{t:"Paris",p:0.10},{t:"France",p:0.04}], kl: 0.003 },
+  { text: "capital", desc: "After 'The', 'capital' is a strong prediction from both models.", parent: [{t:"capital",p:0.65},{t:"city",p:0.20},{t:"heart",p:0.10},{t:"answer",p:0.05}], student: [{t:"capital",p:0.70},{t:"city",p:0.18},{t:"heart",p:0.08},{t:"answer",p:0.04}], kl: 0.002 },
+  { text: "of", desc: "Grammatically constrained. Very high agreement.", parent: [{t:"of",p:0.88},{t:"city",p:0.07},{t:"in",p:0.03},{t:"for",p:0.02}], student: [{t:"of",p:0.90},{t:"city",p:0.05},{t:"in",p:0.03},{t:"for",p:0.02}], kl: 0.001 },
+  { text: "France", desc: "Key factual token. Both models are confident here.", parent: [{t:"France",p:0.80},{t:"Paris",p:0.10},{t:"Europe",p:0.07},{t:"the",p:0.03}], student: [{t:"France",p:0.75},{t:"Paris",p:0.14},{t:"Europe",p:0.08},{t:"the",p:0.03}], kl: 0.006 },
+  { text: "is", desc: "Simple linking verb. Very aligned.", parent: [{t:"is",p:0.82},{t:"was",p:0.10},{t:"has",p:0.05},{t:"remains",p:0.03}], student: [{t:"is",p:0.79},{t:"was",p:0.12},{t:"has",p:0.06},{t:"remains",p:0.03}], kl: 0.002 },
+  { text: "Paris", desc: "The answer! Both models very confident. The student sharpens slightly after fine-tuning.", parent: [{t:"Paris",p:0.91},{t:"Lyon",p:0.04},{t:"Marseille",p:0.03},{t:"Nice",p:0.02}], student: [{t:"Paris",p:0.95},{t:"Lyon",p:0.02},{t:"Marseille",p:0.02},{t:"Nice",p:0.01}], kl: 0.008 },
+];
+
+/* ── Render token sentence ── */
+function renderTokenSentence() {
+  const el = document.getElementById('tokenSentence');
+  el.innerHTML = tokenData.map((t, i) =>
+    `<span class="token student-tok" id="tok_${i}" onclick="selectToken(${i})">${t.text}</span>`
+  ).join(' ');
+}
+
+function selectToken(i) {
+  document.querySelectorAll('.token').forEach(t => t.classList.remove('active'));
+  document.getElementById('tok_' + i).classList.add('active');
+  const d = tokenData[i];
+  document.getElementById('tokenDetail').style.display = 'block';
+  document.getElementById('tokenTitle').textContent = `Token: "${d.text}"`;
+  document.getElementById('tokenDesc').textContent = d.desc;
+  renderBars('parentBars', d.parent, '#7F77DD');
+  renderBars('studentBars', d.student, '#1D9E75');
+  document.getElementById('tokenKL').textContent = d.kl.toFixed(4);
+}
+
+function renderBars(elId, data, color) {
+  const maxP = Math.max(...data.map(d => d.p));
+  document.getElementById(elId).innerHTML = data.map(d => {
+    const h = Math.round((d.p / maxP) * 85);
+    return `<div class="bar-col">
+      <div class="bar-pct" style="color:${color}">${Math.round(d.p * 100)}%</div>
+      <div style="flex:1; display:flex; align-items:flex-end; width:100%">
+        <div class="bar-fill" style="height:${h}px; background:${color}; opacity:0.82"></div>
+      </div>
+      <div class="bar-tok">${d.t}</div>
+    </div>`;
+  }).join('');
+}
+
+renderTokenSentence();
+
+/* ── Gaussian helper ── */
+function gaussian(x, mu, sigma) {
+  return Math.exp(-0.5 * Math.pow((x - mu) / sigma, 2));
+}
+
+/* ── Draw two distributions on a canvas ── */
+function drawDists(canvasId, muP, muQ, sigP, sigQ, colorP, colorQ) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.parentElement.clientWidth - 32;
+  canvas.width = W * dpr;
+  canvas.height = 200 * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = '200px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, 200);
+
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const textColor = isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.3)';
+
+  for (let gx = 0; gx <= W; gx += W / 5) {
+    ctx.beginPath(); ctx.strokeStyle = gridColor; ctx.lineWidth = 0.5;
+    ctx.moveTo(gx, 0); ctx.lineTo(gx, 180); ctx.stroke();
+  }
+
+  function drawCurve(mu, sig, color, alpha) {
+    ctx.beginPath();
+    for (let px = 0; px <= W; px++) {
+      const t = px / W;
+      const y = gaussian(t, mu / 100, sig);
+      const sy = 168 - y * 145;
+      px === 0 ? ctx.moveTo(px, sy) : ctx.lineTo(px, sy);
+    }
+    ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.lineTo(W, 168); ctx.lineTo(0, 168); ctx.closePath();
+    ctx.fillStyle = color.replace('rgb', 'rgba').replace(')', `,${alpha})`);
+    ctx.fill();
+  }
+
+  drawCurve(muP, sigP, colorP, 0.15);
+  drawCurve(muQ, sigQ, colorQ, 0.12);
+
+  ctx.font = `500 12px system-ui, sans-serif`;
+  ctx.fillStyle = colorP; ctx.fillText('P (true distribution)', 10, 16);
+  ctx.fillStyle = colorQ; ctx.fillText('Q (approximation)', 10, 32);
+}
+
+function updateMainDist() {
+  const pv = +document.getElementById('pPeak').value;
+  const qv = +document.getElementById('qPeak').value;
+  document.getElementById('pPeakVal').textContent = pv + '%';
+  document.getElementById('qPeakVal').textContent = qv + '%';
+  drawDists('distCanvas', pv, qv, 0.14, 0.14, 'rgb(83,74,183)', 'rgb(29,158,117)');
+}
+
+document.getElementById('pPeak').addEventListener('input', updateMainDist);
+document.getElementById('qPeak').addEventListener('input', updateMainDist);
+
+/* ── KL table calculator ── */
+function computeKL() {
+  const p0 = +document.getElementById('p0').value / 100;
+  const q0 = +document.getElementById('q0').value / 100;
+  const split = +document.getElementById('split').value / 100;
+  document.getElementById('p0val').textContent = Math.round(p0 * 100) + '%';
+  document.getElementById('q0val').textContent = Math.round(q0 * 100) + '%';
+  document.getElementById('splitval').textContent = Math.round(split * 100) + '%';
+
+  const remP = 1 - p0, remQ = 1 - q0;
+  const outcomes = [
+    { name: '🌧️ Rain',   p: p0,              q: q0              },
+    { name: '☀️ Sunny',  p: remP * split,    q: remQ * split    },
+    { name: '🌫️ Cloudy', p: remP * (1-split), q: remQ * (1-split) },
+  ];
+
+  let kl = 0;
+  const rows = outcomes.map(o => {
+    if (o.p < 0.001 || o.q < 0.001) {
+      return `<tr><td>${o.name}</td><td class="td-num">${(o.p*100).toFixed(1)}%</td><td class="td-num">${(o.q*100).toFixed(1)}%</td><td class="td-num">—</td><td class="td-num">—</td></tr>`;
+    }
+    const logr = Math.log(o.p / o.q);
+    const contrib = o.p * logr;
+    kl += contrib;
+    return `<tr><td>${o.name}</td>
+      <td class="td-num">${(o.p*100).toFixed(1)}%</td>
+      <td class="td-num">${(o.q*100).toFixed(1)}%</td>
+      <td class="td-num td-highlight">${logr.toFixed(3)}</td>
+      <td class="td-num td-highlight">${contrib.toFixed(4)}</td></tr>`;
+  });
+
+  document.getElementById('klTableBody').innerHTML = rows.join('') +
+    `<tr class="total-row">
+       <td colspan="4" style="text-align:right; color:var(--color-text2); font-size:13px">KL(P ∥ Q) =</td>
+       <td class="td-num td-highlight" style="font-size:17px">${Math.max(0, kl).toFixed(4)}</td>
+     </tr>`;
+  document.getElementById('klResult').textContent = Math.max(0, kl).toFixed(4);
+}
+
+['p0','q0','split'].forEach(id => document.getElementById(id).addEventListener('input', computeKL));
+
+/* ── Reverse KL visualization ── */
+let klMode = 'forward';
+function showKLMode(mode) {
+  klMode = mode;
+  const canvas = document.getElementById('reverseCanvas');
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.parentElement.clientWidth - 32;
+  canvas.width = W * dpr;
+  canvas.height = 200 * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = '200px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, 200);
+
+  function bimodal(x) {
+    return 0.5 * gaussian(x, 0.25, 0.09) + 0.5 * gaussian(x, 0.72, 0.09);
+  }
+
+  function drawFn(fn, color, alpha) {
+    let vals = [];
+    for (let px = 0; px <= W; px++) vals.push(fn(px / W));
+    const mx = Math.max(...vals);
+    ctx.beginPath();
+    vals.forEach((v, px) => {
+      const sy = 163 - (v / mx) * 140;
+      px === 0 ? ctx.moveTo(px, sy) : ctx.lineTo(px, sy);
+    });
+    ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.lineTo(W, 163); ctx.lineTo(0, 163); ctx.closePath();
+    ctx.fillStyle = color.replace('rgb', 'rgba').replace(')', `,${alpha})`);
+    ctx.fill();
+  }
+
+  drawFn(bimodal, 'rgb(83,74,183)', 0.14);
+
+  if (mode === 'forward') {
+    drawFn(x => 0.55 * gaussian(x, 0.48, 0.23), 'rgb(29,158,117)', 0.14);
+    document.getElementById('klModeExplain').textContent =
+      'Forward KL: Q (green) spreads wide to cover both peaks of P — it covers all modes but blurs precision.';
+  } else {
+    drawFn(x => gaussian(x, 0.26, 0.08), 'rgb(29,158,117)', 0.14);
+    document.getElementById('klModeExplain').textContent =
+      'Reverse KL: Q (green) snaps to just one peak of P — sharp and confident, but ignores the other mode entirely.';
+  }
+
+  ctx.font = `500 12px system-ui, sans-serif`;
+  ctx.fillStyle = 'rgb(83,74,183)';  ctx.fillText('P — bimodal truth', 10, 16);
+  ctx.fillStyle = 'rgb(29,158,117)'; ctx.fillText('Q — approximation', 10, 32);
+}
+
+/* ── Init on load ── */
+window.addEventListener('load', () => {
+  updateMainDist();
+  computeKL();
+  showKLMode('forward');
+});
+window.addEventListener('resize', () => {
+  updateMainDist();
+  showKLMode(klMode);
+});
+</script>
+</body>
+</html>

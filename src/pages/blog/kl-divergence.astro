@@ -1,0 +1,1450 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="KL Divergence — Made Visual" description="An interactive visual guide to KL divergence: what it is, how it's computed, and where it shows up in LLMs and PPO training.">
+
+<div id="read-progress"></div>
+
+<div class="blog-shell">
+  <div class="nav-column">
+    <nav id="section-nav" aria-label="Section navigation">
+      <div class="section-index-label mono">Index</div>
+      <ul class="section-index" id="sectionIndex"></ul>
+    </nav>
+  </div>
+
+  <article class="blog-post">
+
+  <!-- Hero -->
+  <section class="section" id="s0" data-label="Intro">
+    <div class="hero">
+      <div class="hero-tag mono">10 min read · ML Fundamentals</div>
+      <h1>KL Divergence<br><em>made visual</em></h1>
+      <p class="hero-sub">No scary math. Just two distributions,<br>and how far apart they are.</p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Section 1 — Distribution -->
+  <section class="section" id="s1" data-label="Distributions">
+    <div class="section-label mono">01 — The Big Idea</div>
+    <h2>What even is a distribution?</h2>
+    <p>Before KL Loss, let's get comfortable with distributions. A <strong>probability distribution</strong> tells you how likely each outcome is. Think of it as a "belief" about what will happen.</p>
+    <p>Below are two distributions — <strong>P</strong> (the true one) and <strong>Q</strong> (our guess). Drag the sliders and watch them shift.</p>
+
+    <div class="canvas-wrap">
+      <canvas id="distCanvas" height="155"></canvas>
+      <div class="controls">
+        <span class="ctrl-label mono">P peak position</span>
+        <input type="range" min="0" max="100" value="35" id="pPeak" step="1">
+        <span class="ctrl-val mono" id="pPeakVal">35%</span>
+      </div>
+      <div class="controls">
+        <span class="ctrl-label mono">Q peak position</span>
+        <input type="range" min="0" max="100" value="65" id="qPeak" step="1">
+        <span class="ctrl-val mono" id="qPeakVal">65%</span>
+      </div>
+    </div>
+
+    <div class="callout">
+      <p>When P and Q overlap perfectly, they're identical. When they drift apart — that gap is exactly what KL divergence measures.</p>
+    </div>
+  </section>
+
+  <!-- Section 2 — Formula -->
+  <section class="section" id="s2" data-label="The Formula">
+    <div class="section-label mono">02 — The Formula</div>
+    <h2>What KL divergence actually measures</h2>
+    <p>KL divergence answers: <strong>"How much extra information do I waste if I use Q to describe a world that's actually P?"</strong></p>
+
+    <div class="formula-box">
+      <div class="formula mono">KL(P ∥ Q) = Σ P(x) · log( P(x) / Q(x) )</div>
+      <div class="formula-sub">Sum over all outcomes x. P is truth, Q is our approximation.</div>
+    </div>
+
+    <p>Three things to notice:</p>
+    <div class="props-list">
+      <div class="prop-item">
+        <span class="prop-num mono">1.</span>
+        <span>It's <strong>not symmetric</strong> — KL(P∥Q) ≠ KL(Q∥P). Direction matters.</span>
+      </div>
+      <div class="prop-item">
+        <span class="prop-num mono">2.</span>
+        <span>It's always <strong>≥ 0</strong>. Zero means the distributions are identical.</span>
+      </div>
+      <div class="prop-item">
+        <span class="prop-num mono">3.</span>
+        <span>The <strong>log ratio</strong> captures surprise — when Q says something is rare but P says it's common, that's expensive.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3 — Live Calculation -->
+  <section class="section" id="s3" data-label="Live Calc">
+    <div class="section-label mono">03 — Live Calculation</div>
+    <h2>Let's compute it ourselves</h2>
+    <p>Three outcomes: Rain, Sunny, and Cloudy. P is the actual weather, Q is the forecast.</p>
+
+    <div class="calc-panel">
+      <div class="calc-panel-header">
+        <span class="calc-panel-title mono">KL(P ∥ Q)</span>
+        <div class="calc-kl-pill mono">
+          <span class="calc-kl-val" id="klResult">—</span>
+          <span class="calc-kl-unit">nats</span>
+        </div>
+      </div>
+
+      <div class="calc-sliders">
+        <div class="calc-slider-card">
+          <label class="calc-slider-label mono" for="p0">Rain · P (truth)</label>
+          <div class="calc-slider-row">
+            <input type="range" min="5" max="85" value="50" id="p0" step="5">
+            <span class="calc-slider-val mono" id="p0val">50%</span>
+          </div>
+        </div>
+        <div class="calc-slider-card">
+          <label class="calc-slider-label mono" for="q0">Rain · Q (forecast)</label>
+          <div class="calc-slider-row">
+            <input type="range" min="5" max="85" value="20" id="q0" step="5">
+            <span class="calc-slider-val mono" id="q0val">20%</span>
+          </div>
+        </div>
+        <div class="calc-slider-card">
+          <label class="calc-slider-label mono" for="split">Sunny share of remainder</label>
+          <div class="calc-slider-row">
+            <input type="range" min="10" max="80" value="50" id="split" step="5">
+            <span class="calc-slider-val mono" id="splitval">50%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="calc-outcomes" id="klBreakdown"></div>
+
+      <p class="calc-note">As P and Q align, KL approaches <strong>0</strong>. The farther apart they are, the higher the penalty.</p>
+    </div>
+  </section>
+
+  <!-- Section 4 — LLMs / PPO -->
+  <section class="section" id="s4" data-label="KL in LLMs">
+    <div class="section-label mono">04 — In the Wild: LLMs</div>
+    <h2>Where does this show up in AI?</h2>
+    <p>When training a language model with <strong>PPO (Reinforcement Learning from Human Feedback)</strong>, we want the new model to improve — but not drift too far from the original. KL divergence is the leash.</p>
+
+    <div class="ppo-box">
+      <div class="ppo-models">
+        <div class="model-card">
+          <div class="model-name">Parent model</div>
+          <div class="model-sub">Original pretrained LLM<br>Distribution = P</div>
+        </div>
+        <div class="arrow-mid mono">fine-tune</div>
+        <div class="model-card">
+          <div class="model-name">Student model</div>
+          <div class="model-sub">Fine-tuned version<br>Distribution = Q</div>
+        </div>
+      </div>
+      <div class="ppo-formula mono">
+        PPO loss = reward signal <span class="accent">− β · KL(Q ∥ P)</span>
+      </div>
+      <p class="ppo-note">The KL term punishes the student for straying too far from the parent.</p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Section 5 — Token by Token -->
+  <section class="section" id="s5" data-label="Token by Token">
+    <div class="section-label mono">05 — Token by Token</div>
+    <h2>A real example: "What is the capital of France?"</h2>
+    <p>The student replies: <em>"The capital of France is Paris"</em>. Each token gets its own probability from both models. Click a token to see how the distributions compare.</p>
+
+    <div class="token-layout">
+      <div class="token-col-main">
+        <div class="token-scene">
+          <div class="sentence-box" id="tokenSentence"></div>
+        </div>
+        <div class="callout callout-tight">
+          <p>In practice, we only measure KL loss on the <strong>tokens the student actually generates</strong> — not the entire vocabulary. This is the "sample KL" approximation used in real training pipelines.</p>
+        </div>
+      </div>
+      <div class="token-col-detail" id="tokenDetail">
+        <p class="token-placeholder" id="tokenPlaceholder">Click a token to compare parent vs student distributions.</p>
+        <div class="token-detail-body" id="tokenDetailBody" hidden>
+          <div class="token-detail-header">
+            <span class="token-badge mono" id="tokenTitle"></span>
+            <div class="token-kl-pill mono">
+              <span class="token-kl-val" id="tokenKL">—</span>
+              <span class="token-kl-unit">nats</span>
+            </div>
+          </div>
+          <p id="tokenDesc" class="token-desc"></p>
+          <div class="token-compare">
+            <div class="token-model-block">
+              <div class="token-model-label">
+                <span class="dot" style="background:#7F77DD"></span> Parent model (P)
+              </div>
+              <div class="token-bar-list" id="parentBars"></div>
+            </div>
+            <div class="token-model-block">
+              <div class="token-model-label">
+                <span class="dot" style="background:#1D9E75"></span> Student model (Q)
+              </div>
+              <div class="token-bar-list" id="studentBars"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Section 6 — Forward vs Reverse -->
+  <section class="section" id="s6" data-label="Forward vs Reverse">
+    <div class="section-label mono">06 — Forward vs Reverse</div>
+    <h2>KL(P∥Q) vs KL(Q∥P) — does direction matter?</h2>
+    <p>Yes — a lot. They measure different things and lead to different model behaviors.</p>
+
+    <div class="reverse-compare">
+      <div class="rev-card forward">
+        <h4>Forward KL(P ∥ Q)</h4>
+        <p>Penalizes Q for putting low probability where P puts high probability. Q tries to <strong>cover all modes</strong> of P — even if it spreads too thin.</p>
+      </div>
+      <div class="rev-card reverse">
+        <h4>Reverse KL(Q ∥ P)</h4>
+        <p>Penalizes Q for putting high probability where P puts low probability. Q <strong>picks one mode and sharpens</strong> onto it — mode-seeking behavior.</p>
+      </div>
+    </div>
+
+    <p style="margin-top:1rem">The <strong>On-Policy Self-Distillation</strong> method uses reverse KL. The student model generates outputs, then is trained to match its own good generations — making it sharper and more confident.</p>
+
+    <div class="canvas-wrap">
+      <canvas id="reverseCanvas" height="155"></canvas>
+      <div style="display:flex; gap:0.75rem; margin-top:0.75rem; flex-wrap:wrap">
+        <button type="button" class="play-btn" data-kl-mode="forward">Forward KL</button>
+        <button type="button" class="play-btn" data-kl-mode="reverse">Reverse KL</button>
+      </div>
+      <div id="klModeExplain" class="kl-mode-explain"></div>
+    </div>
+  </section>
+
+  <!-- Section 7 — Recap -->
+  <section class="section" id="s7" data-label="Recap">
+    <div class="section-label mono">Recap</div>
+    <h2>The 30-second summary</h2>
+    <div class="recap-list">
+      <div class="recap-item">
+        <span><strong>KL divergence</strong> measures how different distribution Q is from distribution P.</span>
+      </div>
+      <div class="recap-item">
+        <span><strong>KL(P∥Q) = Σ P(x) · log(P/Q)</strong> — always non-negative, zero when identical.</span>
+      </div>
+      <div class="recap-item">
+        <span><strong>In LLMs (PPO)</strong>, it keeps the student model from drifting too far from the parent.</span>
+      </div>
+      <div class="recap-item">
+        <span><strong>Reverse KL</strong> is used in self-distillation for sharper, mode-seeking behavior.</span>
+      </div>
+    </div>
+  </section>
+
+  </article>
+</div>
+
+</Layout>
+
+<style>
+  /* ── Full-screen scroll snap ── */
+  :global(html) {
+    scroll-snap-type: y mandatory;
+    scroll-padding-top: 50px;
+  }
+  :global(body > .page-shell > footer) {
+    display: none;
+  }
+
+  /* ── Progress bar ── */
+  #read-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 2px;
+    width: 0%;
+    background: #7F77DD;
+    z-index: 9999;
+    transition: width 0.1s linear;
+  }
+
+  /* ── Shell: nav column + content column (no overlap) ── */
+  .blog-shell {
+    --content-width: 56rem;
+    --nav-width: 7.5rem;
+    --shell-gap: 2rem;
+    --shell-width: min(calc(var(--content-width) + var(--nav-width) + var(--shell-gap)), calc(100vw - 3rem));
+    width: var(--shell-width);
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    display: grid;
+    grid-template-columns: var(--nav-width) minmax(0, 1fr);
+    gap: var(--shell-gap);
+    align-items: start;
+  }
+
+  .nav-column {
+    width: var(--nav-width);
+    min-height: 1px;
+    position: relative;
+  }
+
+  /* ── Section index (left; active centered, others faded) ── */
+  #section-nav {
+    position: fixed;
+    top: 50%;
+    left: 1.75rem;
+    transform: translateY(-50%);
+    z-index: 100;
+    width: max-content;
+    max-width: 11rem;
+    overflow: visible;
+    pointer-events: none;
+  }
+  .section-index-label {
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 0.65rem;
+    padding-left: 0.1rem;
+    pointer-events: none;
+  }
+  .section-index {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    pointer-events: auto;
+  }
+  :global(.section-index-item) {
+    display: block;
+    width: max-content;
+    max-width: 11rem;
+    text-align: left;
+    border: none;
+    background: none;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.68rem;
+    line-height: 1.3;
+    padding: 7px 0;
+    cursor: pointer;
+    color: var(--text-3);
+    opacity: 0.5;
+    white-space: nowrap;
+    transition: opacity 0.35s ease, color 0.35s ease;
+  }
+  :global(.section-index-item:hover) {
+    opacity: 0.72;
+  }
+  :global(.section-index-item.active) {
+    opacity: 1;
+    color: #534AB7;
+    font-weight: 500;
+  }
+  :global([data-theme="dark"] .section-index-item.active) {
+    color: #9B93F0;
+  }
+
+  @media (max-width: 900px) {
+    .blog-shell {
+      --content-width: min(56rem, calc(100vw - 3rem));
+      --shell-width: var(--content-width);
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+    .nav-column,
+    #section-nav { display: none; }
+  }
+
+  /* ── Layout ── */
+  .blog-post {
+    max-width: var(--content-width);
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+  }
+
+  /* ── Hero ── */
+  .hero { text-align: center; padding: 0; }
+  .hero-tag {
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 1rem;
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    margin-bottom: 1rem;
+  }
+  .hero h1 em {
+    font-family: "Lora", serif;
+    font-style: italic;
+    font-weight: 500;
+    color: #7F77DD;
+  }
+  .hero-sub {
+    font-size: 1rem;
+    color: var(--text-2);
+    line-height: 1.6;
+  }
+
+  /* ── Sections (one viewport below nav; content centered, no inner scroll) ── */
+  .section {
+    --section-h: calc(100vh - 50px);
+    --section-h: calc(100dvh - 50px);
+    height: var(--section-h);
+    min-height: var(--section-h);
+    max-height: var(--section-h);
+    overflow: hidden;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    scroll-margin-top: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    justify-content: safe center;
+    margin: 0;
+    padding: 0.75rem 0;
+    box-sizing: border-box;
+  }
+  .section > :first-child { margin-top: 0; }
+  .section h2 { margin-bottom: 0.45rem; }
+  .section p { margin-bottom: 0.55rem; line-height: 1.6; }
+  .section .callout { margin: 0.5rem 0; }
+  .section .canvas-wrap { margin: 0.65rem 0; padding: 0.75rem; }
+  .section .formula-box { margin: 0.65rem 0; padding: 1rem; }
+  .section .props-list { margin: 0.45rem 0; gap: 0.45rem; }
+  .section .ppo-box { margin: 0.65rem 0; padding: 1rem; }
+  .section .controls { margin: 0.35rem 0; }
+  .section-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 0.5rem;
+  }
+  h2 {
+    font-size: 1.35rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 0.75rem;
+  }
+  h3 {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 0.4rem;
+  }
+  p {
+    font-size: 0.925rem;
+    line-height: 1.75;
+    color: var(--text-2);
+    margin-bottom: 0.85rem;
+  }
+  p strong { color: var(--text); font-weight: 500; }
+  p em { font-family: "Lora", serif; font-style: italic; }
+
+  .divider {
+    display: none;
+  }
+
+  /* ── Callout ── */
+  .callout {
+    background: var(--surface);
+    border-left: 3px solid #7F77DD;
+    border-radius: 0 6px 6px 0;
+    padding: 0.85rem 1.1rem;
+    margin: 1.25rem 0;
+  }
+  .callout p { margin: 0; font-size: 0.875rem; }
+  .callout-tight {
+    padding: 0.6rem 0.85rem;
+    margin: 0.45rem 0 !important;
+  }
+  .callout-tight p { font-size: 0.8rem; line-height: 1.5; }
+
+  /* ── Live calc panel ── */
+  .calc-panel {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+    margin-top: 0.35rem;
+  }
+  .calc-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .calc-panel-title {
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .calc-kl-pill {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    padding: 5px 12px;
+    border-radius: 6px;
+    background: #EEEDFE;
+    border: 1px solid #AFA9EC;
+  }
+  :global([data-theme="dark"]) .calc-kl-pill {
+    background: #1d1c35;
+    border-color: #3d3870;
+  }
+  .calc-kl-val {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #534AB7;
+  }
+  .calc-kl-unit {
+    font-size: 0.62rem;
+    color: var(--text-3);
+  }
+  :global([data-theme="dark"]) .calc-kl-val { color: #9B93F0; }
+  .calc-sliders {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+  }
+  .calc-slider-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.65rem 0.75rem;
+  }
+  .calc-slider-label {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--text-2);
+    margin-bottom: 0.45rem;
+    letter-spacing: 0.02em;
+  }
+  .calc-slider-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .calc-slider-row input[type=range] {
+    flex: 1;
+    min-width: 0;
+    accent-color: #7F77DD;
+    cursor: pointer;
+  }
+  .calc-slider-val {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--text);
+    min-width: 2.25rem;
+    text-align: right;
+  }
+  .calc-outcomes {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+  :global(.calc-outcome) {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.6rem 0.7rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  :global(.calc-outcome-name) {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+  :global(.calc-outcome-contrib) {
+    font-size: 0.68rem;
+    color: #534AB7;
+    font-weight: 500;
+  }
+  :global([data-theme="dark"] .calc-outcome-contrib) { color: #9B93F0; }
+  :global(.calc-outcome-head) {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  :global(.calc-prob-row) {
+    display: grid;
+    grid-template-columns: 1.1rem 1fr 2.25rem;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  :global(.calc-prob-label) {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.62rem;
+    font-weight: 500;
+    color: #534AB7;
+  }
+  :global(.calc-prob-label.is-q) { color: #1D9E75; }
+  :global(.calc-prob-pct) {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.62rem;
+    text-align: right;
+    color: var(--text-2);
+  }
+  :global(.calc-math) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.6rem;
+    color: var(--text-3);
+    padding-top: 0.25rem;
+    border-top: 1px solid var(--border-soft);
+  }
+  :global(.calc-math span:last-child) {
+    color: #534AB7;
+    font-weight: 500;
+  }
+  :global([data-theme="dark"] .calc-math span:last-child) { color: #9B93F0; }
+  .calc-note {
+    font-size: 0.78rem;
+    color: var(--text-2);
+    line-height: 1.5;
+    margin: 0.75rem 0 0;
+  }
+  .calc-note strong { color: var(--text); font-weight: 500; }
+
+  @media (max-width: 720px) {
+    .calc-sliders,
+    .calc-outcomes { grid-template-columns: 1fr; }
+  }
+
+  /* ── Token side-by-side ── */
+  .token-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 1.25rem;
+    align-items: stretch;
+  }
+  .token-scene { margin: 0.35rem 0 0; }
+  .token-col-detail {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+    min-height: 14rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .token-col-detail.is-populated {
+    justify-content: flex-start;
+  }
+  .token-placeholder {
+    font-size: 0.8rem;
+    color: var(--text-3);
+    line-height: 1.55;
+    margin: 0;
+    text-align: center;
+  }
+  .token-detail-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    width: 100%;
+  }
+  .token-detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .token-badge {
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 5px 11px;
+    border-radius: 6px;
+    background: #EEEDFE;
+    color: #534AB7;
+    border: 1px solid #AFA9EC;
+  }
+  :global([data-theme="dark"]) .token-badge {
+    background: #1d1c35;
+    color: #9B93F0;
+    border-color: #3d3870;
+  }
+  .token-kl-pill {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .token-kl-val {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #534AB7;
+  }
+  .token-kl-unit {
+    font-size: 0.62rem;
+    color: var(--text-3);
+  }
+  :global([data-theme="dark"]) .token-kl-val { color: #9B93F0; }
+  .token-desc {
+    font-size: 0.8rem;
+    margin: 0;
+    color: var(--text-2);
+    line-height: 1.5;
+  }
+  .token-compare {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin-top: 0.15rem;
+  }
+  .token-model-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.65rem 0.75rem;
+  }
+  .token-model-label {
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 0.45rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .token-bar-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  :global(.hbar-row) {
+    display: grid;
+    grid-template-columns: 4.25rem 1fr 2.5rem;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  :global(.hbar-tok) {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.65rem;
+    color: var(--text-2);
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  :global(.hbar-track) {
+    height: 7px;
+    background: var(--border-soft);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  :global(.hbar-fill) {
+    height: 100%;
+    border-radius: 4px;
+    width: 0;
+    transition: width 0.4s ease;
+  }
+  :global(.hbar-pct) {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.62rem;
+    font-weight: 500;
+    text-align: right;
+    color: var(--text);
+  }
+
+  /* ── Canvas wrap ── */
+  .canvas-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1.25rem 0;
+  }
+  canvas { display: block; width: 100%; }
+
+  /* ── Controls ── */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0.6rem 0;
+    flex-wrap: wrap;
+  }
+  .ctrl-label { font-size: 0.78rem; color: var(--text-2); min-width: 110px; }
+  .ctrl-val { font-size: 0.78rem; font-weight: 500; min-width: 38px; color: var(--text); }
+  input[type=range] { flex: 1; min-width: 100px; accent-color: #7F77DD; cursor: pointer; }
+
+  /* ── Formula box ── */
+  .formula-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    text-align: center;
+    margin: 1.25rem 0;
+  }
+  .formula { font-size: 1.05rem; color: var(--text); }
+  .formula-sub { font-size: 0.78rem; color: var(--text-2); margin-top: 0.5rem; }
+
+  /* ── Props list ── */
+  .props-list { display: flex; flex-direction: column; gap: 0.6rem; margin: 0.75rem 0; }
+  .prop-item { display: flex; gap: 0.75rem; align-items: flex-start; font-size: 0.925rem; color: var(--text-2); }
+  .prop-item strong { color: var(--text); font-weight: 500; }
+  .prop-num { color: #7F77DD; font-size: 0.875rem; flex-shrink: 0; padding-top: 0.05rem; }
+
+  /* ── Table ── */
+  .table-wrap {
+    overflow-x: auto;
+    margin: 1.25rem 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.825rem; }
+  th {
+    text-align: left;
+    padding: 6px 10px;
+    font-weight: 500;
+    font-size: 0.75rem;
+    color: var(--text-2);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  td { padding: 6px 10px; border-bottom: 1px solid var(--border-soft); color: var(--text); }
+  .td-num { font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; }
+  .td-hi { font-weight: 500; color: #534AB7; }
+  tr.total-row td {
+    font-weight: 500;
+    border-top: 1px solid var(--border);
+    border-bottom: none;
+    padding-top: 12px;
+    background: var(--surface);
+  }
+  :global([data-theme="dark"]) .td-hi { color: #9B93F0; }
+
+  /* ── KL result ── */
+  .kl-result {
+    text-align: center;
+    padding: 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin: 0.75rem 0;
+  }
+  .kl-result-compact {
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+  }
+  .kl-result-compact .kl-big { font-size: 2rem; }
+  .kl-big { font-size: 2.5rem; font-weight: 500; color: #534AB7; }
+  .kl-label { font-size: 0.78rem; color: var(--text-2); margin-top: 4px; }
+  :global([data-theme="dark"]) .kl-big { color: #9B93F0; }
+
+  /* ── PPO box ── */
+  .ppo-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin: 1.25rem 0;
+  }
+  .ppo-models {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .model-card {
+    flex: 1;
+    min-width: 120px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.85rem 1rem;
+    text-align: center;
+  }
+  .model-name { font-size: 0.85rem; font-weight: 500; color: var(--text); }
+  .model-sub { font-size: 0.75rem; color: var(--text-2); margin-top: 0.35rem; line-height: 1.5; }
+  .arrow-mid { font-size: 0.875rem; color: var(--text-3); align-self: center; white-space: nowrap; }
+  .ppo-formula { font-size: 0.875rem; color: var(--text-2); margin-bottom: 0.5rem; }
+  .ppo-formula .accent { color: #534AB7; font-weight: 500; }
+  .ppo-note { font-size: 0.825rem; color: var(--text-2); margin: 0; }
+  :global([data-theme="dark"]) .ppo-formula .accent { color: #9B93F0; }
+
+  /* ── Token scene ── */
+  .token-scene { margin: 0.35rem 0 0; }
+  .sentence-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    font-size: 0.925rem;
+    line-height: 2.6;
+    letter-spacing: 0.01em;
+  }
+  :global(.token) {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 5px;
+    margin: 2px;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    border: 1px solid transparent;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.825rem;
+    background: #E1F5EE;
+    color: #085041;
+    border-color: #5DCAA5;
+  }
+  :global([data-theme="dark"] .token) {
+    background: #0d2e25;
+    color: #5DCAA5;
+    border-color: #1D6B50;
+  }
+  :global(.token.active) {
+    transform: scale(1.12);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  }
+
+  /* ── Dist bars ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin: 0.75rem 0; }
+  .dist-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.85rem;
+  }
+  .dist-card-title {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .dist-bars { display: flex; gap: 6px; align-items: flex-end; height: 90px; }
+  :global(.bar-col) { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  :global(.bar-track) { flex: 1; display: flex; align-items: flex-end; width: 100%; }
+  :global(.bar-fill) {
+    width: 100%;
+    border-radius: 3px 3px 0 0;
+    transition: height 0.35s ease;
+    min-height: 2px;
+  }
+  :global(.bar-tok) { font-size: 0.6rem; font-family: "IBM Plex Mono", monospace; color: var(--text-2); text-align: center; word-break: break-all; }
+  :global(.bar-pct) { font-size: 0.6rem; font-weight: 500; text-align: center; }
+
+  /* ── Reverse KL ── */
+  .reverse-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin: 0.5rem 0; }
+  #s6 .canvas-wrap { margin-bottom: 0.5rem; }
+  #s6 p { margin-bottom: 0.45rem; }
+  .rev-card { border-radius: 8px; padding: 1rem 1.1rem; }
+  .rev-card.forward { background: #EEEDFE; border: 1px solid #AFA9EC; }
+  .rev-card.reverse { background: #E1F5EE; border: 1px solid #5DCAA5; }
+  :global([data-theme="dark"]) .rev-card.forward { background: #1d1c35; border-color: #3d3870; }
+  :global([data-theme="dark"]) .rev-card.reverse { background: #0d2e25; border-color: #1D6B50; }
+  .rev-card h4 { font-size: 0.85rem; font-weight: 500; margin-bottom: 0.4rem; }
+  .rev-card p { font-size: 0.8rem; margin: 0; line-height: 1.55; }
+  .rev-card.forward h4 { color: #3C3489; }
+  .rev-card.reverse h4 { color: #085041; }
+  .rev-card.forward p { color: #534AB7; }
+  .rev-card.reverse p { color: #0F6E56; }
+  :global([data-theme="dark"]) .rev-card.forward h4 { color: #9B93F0; }
+  :global([data-theme="dark"]) .rev-card.reverse h4 { color: #5DCAA5; }
+  :global([data-theme="dark"]) .rev-card.forward p { color: #8880d8; }
+  :global([data-theme="dark"]) .rev-card.reverse p { color: #3aaa88; }
+  .play-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text-2);
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .play-btn:hover { background: var(--surface-warm); color: var(--text); }
+  .kl-mode-explain {
+    font-size: 0.8rem;
+    color: var(--text-2);
+    margin-top: 0.5rem;
+    min-height: 2.4rem;
+    line-height: 1.5;
+  }
+
+  /* ── Recap ── */
+  .recap-list { display: flex; flex-direction: column; gap: 0.75rem; margin: 1rem 0; }
+  .recap-item { font-size: 0.9rem; color: var(--text-2); line-height: 1.6; }
+  .recap-item strong { color: var(--text); font-weight: 500; }
+
+  @media (max-width: 720px) {
+    .token-layout { grid-template-columns: 1fr; }
+  }
+
+  @media (max-height: 760px) {
+    .section { padding: 0.35rem 0; }
+    .section h2 { font-size: 1.2rem; }
+    .section p { font-size: 0.85rem; margin-bottom: 0.4rem; }
+    .kl-big { font-size: 2rem; }
+    .kl-result-compact .kl-big { font-size: 1.65rem; }
+    .canvas-wrap canvas { max-height: 140px; }
+    .dist-bars { height: 72px; }
+    .calc-panel { padding: 0.75rem 0.85rem; }
+    .calc-sliders { gap: 0.5rem; margin-bottom: 0.6rem; }
+    .calc-slider-card { padding: 0.5rem 0.6rem; }
+    .calc-kl-val { font-size: 0.95rem; }
+  }
+
+  @media (max-width: 500px) {
+    .two-col, .reverse-compare { grid-template-columns: 1fr; }
+    .ppo-models { flex-direction: column; }
+  }
+</style>
+
+<script>
+const CANVAS_H = 155;
+
+/* ─────────── Token data ─────────── */
+const tokenData = [
+  { text: "The", desc: "A very common starting word. Both models agree strongly here.", parent: [{t:"The",p:0.72},{t:"A",p:0.15},{t:"Paris",p:0.08},{t:"France",p:0.05}], student: [{t:"The",p:0.68},{t:"A",p:0.18},{t:"Paris",p:0.10},{t:"France",p:0.04}], kl: 0.003 },
+  { text: "capital", desc: "After 'The', 'capital' is a strong prediction from both models.", parent: [{t:"capital",p:0.65},{t:"city",p:0.20},{t:"heart",p:0.10},{t:"answer",p:0.05}], student: [{t:"capital",p:0.70},{t:"city",p:0.18},{t:"heart",p:0.08},{t:"answer",p:0.04}], kl: 0.002 },
+  { text: "of", desc: "Grammatically constrained. Very high agreement.", parent: [{t:"of",p:0.88},{t:"city",p:0.07},{t:"in",p:0.03},{t:"for",p:0.02}], student: [{t:"of",p:0.90},{t:"city",p:0.05},{t:"in",p:0.03},{t:"for",p:0.02}], kl: 0.001 },
+  { text: "France", desc: "Key factual token. Both models are confident here.", parent: [{t:"France",p:0.80},{t:"Paris",p:0.10},{t:"Europe",p:0.07},{t:"the",p:0.03}], student: [{t:"France",p:0.75},{t:"Paris",p:0.14},{t:"Europe",p:0.08},{t:"the",p:0.03}], kl: 0.006 },
+  { text: "is", desc: "Simple linking verb. Very aligned.", parent: [{t:"is",p:0.82},{t:"was",p:0.10},{t:"has",p:0.05},{t:"remains",p:0.03}], student: [{t:"is",p:0.79},{t:"was",p:0.12},{t:"has",p:0.06},{t:"remains",p:0.03}], kl: 0.002 },
+  { text: "Paris", desc: "The answer! Both models very confident. The student sharpens slightly after fine-tuning.", parent: [{t:"Paris",p:0.91},{t:"Lyon",p:0.04},{t:"Marseille",p:0.03},{t:"Nice",p:0.02}], student: [{t:"Paris",p:0.95},{t:"Lyon",p:0.02},{t:"Marseille",p:0.02},{t:"Nice",p:0.01}], kl: 0.008 },
+];
+
+/* ─────────── Render token sentence ─────────── */
+function renderTokenSentence() {
+  const el = document.getElementById('tokenSentence');
+  if (!el) return;
+  el.innerHTML = tokenData.map((t, i) =>
+    `<span class="token" data-token-index="${i}" role="button" tabindex="0">${t.text}</span>`
+  ).join(' ');
+}
+
+function selectToken(i) {
+  document.querySelectorAll('.token').forEach(t => t.classList.remove('active'));
+  const tok = document.querySelector(`[data-token-index="${i}"]`);
+  if (tok) tok.classList.add('active');
+  const d = tokenData[i];
+  const detail = document.getElementById('tokenDetail');
+  const placeholder = document.getElementById('tokenPlaceholder');
+  const body = document.getElementById('tokenDetailBody');
+  if (placeholder) placeholder.hidden = true;
+  if (body) body.hidden = false;
+  if (detail) detail.classList.add('is-populated');
+  const title = document.getElementById('tokenTitle');
+  if (title) title.textContent = d.text;
+  const desc = document.getElementById('tokenDesc');
+  if (desc) desc.textContent = d.desc;
+  renderTokenBars('parentBars', d.parent, '#7F77DD');
+  renderTokenBars('studentBars', d.student, '#1D9E75');
+  const kl = document.getElementById('tokenKL');
+  if (kl) kl.textContent = d.kl.toFixed(4);
+}
+
+function renderTokenBars(elId, data, color) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = data.map(d => {
+    const pct = Math.round(d.p * 100);
+    return `<div class="hbar-row">
+      <span class="hbar-tok">${d.t}</span>
+      <div class="hbar-track">
+        <div class="hbar-fill" data-width="${pct}" style="background:${color};opacity:0.88"></div>
+      </div>
+      <span class="hbar-pct" style="color:${color}">${pct}%</span>
+    </div>`;
+  }).join('');
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      el.querySelectorAll('.hbar-fill').forEach(bar => {
+        bar.style.width = `${bar.dataset.width}%`;
+      });
+    });
+  });
+}
+
+function renderBars(elId, data, color, maxBarH = 58) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const maxP = Math.max(...data.map(d => d.p));
+  el.innerHTML = data.map(d => {
+    const targetH = Math.round((d.p / maxP) * maxBarH);
+    return `<div class="bar-col">
+      <div class="bar-pct" style="color:${color}">${Math.round(d.p * 100)}%</div>
+      <div class="bar-track">
+        <div class="bar-fill" data-target="${targetH}" style="height:0;background:${color};opacity:0.82"></div>
+      </div>
+      <div class="bar-tok">${d.t}</div>
+    </div>`;
+  }).join('');
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      el.querySelectorAll('.bar-fill').forEach(bar => {
+        bar.style.height = `${bar.dataset.target}px`;
+      });
+    });
+  });
+}
+
+/* ─────────── Dark mode helper ─────────── */
+function isDark() {
+  return document.documentElement.getAttribute('data-theme') === 'dark';
+}
+
+/* ─────────── Gaussian ─────────── */
+function gaussian(x, mu, sigma) {
+  return Math.exp(-0.5 * Math.pow((x - mu) / sigma, 2));
+}
+
+/* ─────────── Draw two distributions ─────────── */
+function drawDists(canvasId, muP, muQ, sigP, sigQ, colorP, colorQ) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.parentElement.clientWidth - 32;
+  const baseY = CANVAS_H - 32;
+  const plotH = CANVAS_H - 55;
+  canvas.width = W * dpr;
+  canvas.height = CANVAS_H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = CANVAS_H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, CANVAS_H);
+
+  const gridColor = isDark() ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+
+  for (let gx = 0; gx <= W; gx += W / 5) {
+    ctx.beginPath(); ctx.strokeStyle = gridColor; ctx.lineWidth = 0.5;
+    ctx.moveTo(gx, 0); ctx.lineTo(gx, CANVAS_H - 20); ctx.stroke();
+  }
+
+  function drawCurve(mu, sig, color, alpha) {
+    ctx.beginPath();
+    for (let px = 0; px <= W; px++) {
+      const t = px / W;
+      const y = gaussian(t, mu / 100, sig);
+      const sy = baseY - y * plotH;
+      px === 0 ? ctx.moveTo(px, sy) : ctx.lineTo(px, sy);
+    }
+    ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.lineTo(W, baseY); ctx.lineTo(0, baseY); ctx.closePath();
+    ctx.fillStyle = color + Math.round(alpha * 255).toString(16).padStart(2, '0');
+    ctx.fill();
+  }
+
+  drawCurve(muP, sigP, colorP, 0.18);
+  drawCurve(muQ, sigQ, colorQ, 0.14);
+
+  ctx.font = `500 11px "IBM Plex Mono", monospace`;
+  ctx.fillStyle = colorP; ctx.fillText('P (true distribution)', 10, 16);
+  ctx.fillStyle = colorQ; ctx.fillText('Q (approximation)', 10, 30);
+}
+
+function updateMainDist() {
+  const pv = +document.getElementById('pPeak').value;
+  const qv = +document.getElementById('qPeak').value;
+  document.getElementById('pPeakVal').textContent = pv + '%';
+  document.getElementById('qPeakVal').textContent = qv + '%';
+  drawDists('distCanvas', pv, qv, 0.14, 0.14, '#7F77DD', '#1D9E75');
+}
+
+/* ─────────── KL table calculator ─────────── */
+function computeKL() {
+  const p0 = +document.getElementById('p0').value / 100;
+  const q0 = +document.getElementById('q0').value / 100;
+  const split = +document.getElementById('split').value / 100;
+  document.getElementById('p0val').textContent = Math.round(p0 * 100) + '%';
+  document.getElementById('q0val').textContent = Math.round(q0 * 100) + '%';
+  document.getElementById('splitval').textContent = Math.round(split * 100) + '%';
+
+  const remP = 1 - p0, remQ = 1 - q0;
+  const outcomes = [
+    { name: 'Rain',   p: p0,               q: q0              },
+    { name: 'Sunny',  p: remP * split,     q: remQ * split    },
+    { name: 'Cloudy', p: remP * (1-split), q: remQ * (1-split) },
+  ];
+
+  let kl = 0;
+  const cards = outcomes.map(o => {
+    const pPct = Math.round(o.p * 100);
+    const qPct = Math.round(o.q * 100);
+    if (o.p < 0.001 || o.q < 0.001) {
+      return `<div class="calc-outcome">
+        <div class="calc-outcome-head">
+          <span class="calc-outcome-name">${o.name}</span>
+          <span class="calc-outcome-contrib">—</span>
+        </div>
+        <div class="calc-prob-row">
+          <span class="calc-prob-label">P</span>
+          <div class="hbar-track"><div class="hbar-fill" style="width:${pPct}%;background:#7F77DD;opacity:0.88"></div></div>
+          <span class="calc-prob-pct">${pPct}%</span>
+        </div>
+        <div class="calc-prob-row">
+          <span class="calc-prob-label is-q">Q</span>
+          <div class="hbar-track"><div class="hbar-fill" style="width:${qPct}%;background:#1D9E75;opacity:0.88"></div></div>
+          <span class="calc-prob-pct">${qPct}%</span>
+        </div>
+        <div class="calc-math"><span>log(P/Q) undefined</span><span>P · log(P/Q) —</span></div>
+      </div>`;
+    }
+    const logr = Math.log(o.p / o.q);
+    const contrib = o.p * logr;
+    kl += contrib;
+    return `<div class="calc-outcome">
+      <div class="calc-outcome-head">
+        <span class="calc-outcome-name">${o.name}</span>
+        <span class="calc-outcome-contrib">${contrib.toFixed(4)}</span>
+      </div>
+      <div class="calc-prob-row">
+        <span class="calc-prob-label">P</span>
+        <div class="hbar-track"><div class="hbar-fill" style="width:${pPct}%;background:#7F77DD;opacity:0.88"></div></div>
+        <span class="calc-prob-pct">${pPct}%</span>
+      </div>
+      <div class="calc-prob-row">
+        <span class="calc-prob-label is-q">Q</span>
+        <div class="hbar-track"><div class="hbar-fill" style="width:${qPct}%;background:#1D9E75;opacity:0.88"></div></div>
+        <span class="calc-prob-pct">${qPct}%</span>
+      </div>
+      <div class="calc-math">
+        <span>log(P/Q) = ${logr.toFixed(3)}</span>
+        <span>P · log(P/Q) = ${contrib.toFixed(4)}</span>
+      </div>
+    </div>`;
+  });
+
+  const breakdown = document.getElementById('klBreakdown');
+  if (breakdown) breakdown.innerHTML = cards.join('');
+
+  const klRes = document.getElementById('klResult');
+  if (klRes) klRes.textContent = Math.max(0, kl).toFixed(4);
+}
+
+/* ─────────── Reverse KL viz ─────────── */
+let klMode = 'forward';
+function showKLMode(mode) {
+  klMode = mode;
+  const canvas = document.getElementById('reverseCanvas');
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.parentElement.clientWidth - 32;
+  const baseY = CANVAS_H - 37;
+  const plotH = CANVAS_H - 52;
+  canvas.width = W * dpr;
+  canvas.height = CANVAS_H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = CANVAS_H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, CANVAS_H);
+
+  function bimodal(x) {
+    return 0.5 * gaussian(x, 0.25, 0.09) + 0.5 * gaussian(x, 0.72, 0.09);
+  }
+  function drawFn(fn, color, alpha) {
+    let vals = [];
+    for (let px = 0; px <= W; px++) vals.push(fn(px / W));
+    const mx = Math.max(...vals);
+    ctx.beginPath();
+    vals.forEach((v, px) => {
+      const sy = baseY - (v / mx) * plotH;
+      px === 0 ? ctx.moveTo(px, sy) : ctx.lineTo(px, sy);
+    });
+    ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.lineTo(W, baseY); ctx.lineTo(0, baseY); ctx.closePath();
+    ctx.fillStyle = color + Math.round(alpha * 255).toString(16).padStart(2, '0');
+    ctx.fill();
+  }
+
+  drawFn(bimodal, '#7F77DD', 0.18);
+  if (mode === 'forward') {
+    drawFn(x => 0.55 * gaussian(x, 0.48, 0.23), '#1D9E75', 0.18);
+    const el = document.getElementById('klModeExplain');
+    if (el) el.textContent = 'Forward KL: Q (green) spreads wide to cover both peaks of P — it covers all modes but blurs precision.';
+  } else {
+    drawFn(x => gaussian(x, 0.26, 0.08), '#1D9E75', 0.18);
+    const el = document.getElementById('klModeExplain');
+    if (el) el.textContent = 'Reverse KL: Q (green) snaps to just one peak of P — sharp and confident, but ignores the other mode entirely.';
+  }
+
+  ctx.font = `500 11px "IBM Plex Mono", monospace`;
+  ctx.fillStyle = '#7F77DD'; ctx.fillText('P — bimodal truth', 10, 16);
+  ctx.fillStyle = '#1D9E75'; ctx.fillText('Q — approximation', 10, 30);
+}
+
+/* ─────────── Section index ─────────── */
+const SECTIONS = [
+  { id: 's0', label: 'Intro' },
+  { id: 's1', label: 'Distributions' },
+  { id: 's2', label: 'The Formula' },
+  { id: 's3', label: 'Live Calc' },
+  { id: 's4', label: 'KL in LLMs' },
+  { id: 's5', label: 'Token by Token' },
+  { id: 's6', label: 'Forward vs Reverse' },
+  { id: 's7', label: 'Recap' },
+];
+
+let activeSectionId = SECTIONS[0].id;
+let keyboardNavLock = false;
+
+function buildSectionNav() {
+  const list = document.getElementById('sectionIndex');
+  if (!list) return;
+  list.innerHTML = SECTIONS.map((s, i) =>
+    `<li>
+      <button type="button" class="section-index-item" data-index="${i}" data-target="${s.id}">
+        ${s.label}
+      </button>
+    </li>`
+  ).join('');
+
+  list.querySelectorAll('.section-index-item').forEach(btn => {
+    btn.addEventListener('click', () => goToSection(+btn.dataset.index));
+  });
+}
+
+function getActiveSectionId() {
+  const viewportMid = window.innerHeight / 2;
+  let best = SECTIONS[0].id;
+  let bestDist = Infinity;
+  for (const s of SECTIONS) {
+    const el = document.getElementById(s.id);
+    if (!el) continue;
+    const rect = el.getBoundingClientRect();
+    const sectionMid = rect.top + rect.height / 2;
+    const dist = Math.abs(sectionMid - viewportMid);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = s.id;
+    }
+  }
+  return best;
+}
+
+function goToSection(index) {
+  const clamped = Math.max(0, Math.min(SECTIONS.length - 1, index));
+  const el = document.getElementById(SECTIONS[clamped].id);
+  if (!el) return;
+  keyboardNavLock = true;
+  activeSectionId = SECTIONS[clamped].id;
+  updateSectionNav();
+  el.scrollIntoView({ behavior: 'smooth' });
+  window.setTimeout(() => { keyboardNavLock = false; }, 500);
+}
+
+function updateSectionNav() {
+  if (!keyboardNavLock) activeSectionId = getActiveSectionId();
+
+  const activeIndex = SECTIONS.findIndex(s => s.id === activeSectionId);
+  document.querySelectorAll('.section-index-item').forEach((item, i) => {
+    item.classList.toggle('active', i === activeIndex);
+  });
+}
+
+function initSectionNav() {
+  buildSectionNav();
+  updateSectionNav();
+  window.addEventListener('scroll', updateSectionNav, { passive: true });
+  window.addEventListener('resize', updateSectionNav, { passive: true });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
+
+    e.preventDefault();
+    const current = SECTIONS.findIndex(s => s.id === activeSectionId);
+    goToSection(e.key === 'ArrowDown' ? current + 1 : current - 1);
+  });
+}
+
+/* ─────────── Progress bar ─────────── */
+function initProgress() {
+  const bar = document.getElementById('read-progress');
+  if (!bar) return;
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight);
+    bar.style.width = (scrolled * 100).toFixed(1) + '%';
+  }, { passive: true });
+}
+
+function initInteractions() {
+  document.getElementById('tokenSentence')?.addEventListener('click', (e) => {
+    const token = e.target.closest('[data-token-index]');
+    if (token) selectToken(+token.dataset.tokenIndex);
+  });
+
+  document.getElementById('tokenSentence')?.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const token = e.target.closest('[data-token-index]');
+    if (!token) return;
+    e.preventDefault();
+    selectToken(+token.dataset.tokenIndex);
+  });
+
+  document.querySelectorAll('[data-kl-mode]').forEach(btn => {
+    btn.addEventListener('click', () => showKLMode(btn.dataset.klMode));
+  });
+
+  document.getElementById('pPeak')?.addEventListener('input', updateMainDist);
+  document.getElementById('qPeak')?.addEventListener('input', updateMainDist);
+  ['p0', 'q0', 'split'].forEach(id => document.getElementById(id)?.addEventListener('input', computeKL));
+}
+
+/* ─────────── Init ─────────── */
+window.addEventListener('load', () => {
+  renderTokenSentence();
+  initInteractions();
+  updateMainDist();
+  computeKL();
+  showKLMode('forward');
+  initSectionNav();
+  initProgress();
+});
+
+window.addEventListener('resize', () => {
+  updateMainDist();
+  showKLMode(klMode);
+});
+</script>

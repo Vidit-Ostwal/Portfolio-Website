@@ -58,6 +58,13 @@ export interface SubstackPost {
 
 export const substackPosts: SubstackPost[] = [
   {
+    title: 'KL Divergence — Made Visual',
+    url: '/blog/kl-divergence',
+    date: '2026-06-12',
+    summary: 'An interactive visual guide to KL divergence: distributions, the formula, live computation, and how it shows up in LLMs and PPO training.',
+    category: 'LLM Behavior & Sampling',
+  },
+  {
     title: 'MoE Routing Calculation (Excel Walkthrough)',
     url: 'https://docs.google.com/spreadsheets/d/1jVwHc-BfOCop92g6tAfQOeTDb8Nfl3yunvQ3dwR1gI0/edit?usp=sharing',
     date: '2026-01-25',
