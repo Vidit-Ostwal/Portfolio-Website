@@ -44,6 +44,7 @@ function iconUrl(rel: string): string {
     <meta name="description" content={description} />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
+    <link rel="alternate" type="text/plain" href={withBase('/llms.txt')} title="LLM-readable site summary" />
     <title>{tabTitle}</title>
     <link rel="icon" type="image/svg+xml" href={iconUrl('favicon.svg')} sizes="any" />
     <link rel="icon" type="image/png" sizes="32x32" href={iconUrl('favicon-32.png')} />
