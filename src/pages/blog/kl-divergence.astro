@@ -85,147 +85,190 @@ import Layout from '../../layouts/Layout.astro';
   <section class="section" id="s3" data-label="Live Calc">
     <div class="section-label mono">03 — Live Calculation</div>
     <h2>Let's compute it ourselves</h2>
-    <p>Three outcomes: Rain, Sunny, and Cloudy. P is the actual weather, Q is the forecast.</p>
+    <p>Hit <strong>Random</strong> to shuffle two full distributions over Rain, Sunny, and Cloudy. P is truth; Q is the forecast.</p>
 
     <div class="calc-panel">
       <div class="calc-panel-header">
-        <span class="calc-panel-title mono">KL(P ∥ Q)</span>
+        <div class="calc-panel-heading">
+          <span class="calc-panel-title mono">Total KL(P ∥ Q)</span>
+          <span class="calc-panel-sub">P · log(P/Q) summed over all three outcomes</span>
+        </div>
         <div class="calc-kl-pill mono">
           <span class="calc-kl-val" id="klResult">—</span>
           <span class="calc-kl-unit">nats</span>
         </div>
       </div>
 
-      <div class="calc-sliders">
-        <div class="calc-slider-card">
-          <label class="calc-slider-label mono" for="p0">Rain · P (truth)</label>
-          <div class="calc-slider-row">
-            <input type="range" min="5" max="85" value="50" id="p0" step="5">
-            <span class="calc-slider-val mono" id="p0val">50%</span>
-          </div>
-        </div>
-        <div class="calc-slider-card">
-          <label class="calc-slider-label mono" for="q0">Rain · Q (forecast)</label>
-          <div class="calc-slider-row">
-            <input type="range" min="5" max="85" value="20" id="q0" step="5">
-            <span class="calc-slider-val mono" id="q0val">20%</span>
-          </div>
-        </div>
-        <div class="calc-slider-card">
-          <label class="calc-slider-label mono" for="split">Sunny share of remainder</label>
-          <div class="calc-slider-row">
-            <input type="range" min="10" max="80" value="50" id="split" step="5">
-            <span class="calc-slider-val mono" id="splitval">50%</span>
-          </div>
+      <button type="button" class="calc-random-btn" id="calcRandom">Random distributions</button>
+
+      <div class="calc-body">
+        <div class="calc-stacks" id="calcStacks"></div>
+        <div class="calc-penalty-col">
+          <div class="calc-penalty-list" id="klBreakdown"></div>
+          <div class="calc-equation mono" id="klEquation"></div>
         </div>
       </div>
-
-      <div class="calc-outcomes" id="klBreakdown"></div>
-
-      <p class="calc-note">As P and Q align, KL approaches <strong>0</strong>. The farther apart they are, the higher the penalty.</p>
     </div>
   </section>
 
-  <!-- Section 4 — LLMs / PPO -->
-  <section class="section" id="s4" data-label="KL in LLMs">
-    <div class="section-label mono">04 — In the Wild: LLMs</div>
-    <h2>Where does this show up in AI?</h2>
-    <p>When training a language model with <strong>PPO (Reinforcement Learning from Human Feedback)</strong>, we want the new model to improve — but not drift too far from the original. KL divergence is the leash.</p>
+  <!-- Section 4 — Which direction? -->
+  <section class="section" id="s4" data-label="Which Direction">
+    <div class="section-label mono">04 — Which Direction?</div>
+    <h2>What if the loss is KL(P ∥ Q) or KL(Q ∥ P)?</h2>
+    <p>Same two distributions — but the direction flips who weights the sum and which ratio you take. In training, <strong>P is frozen</strong> (truth / parent). Only <strong>Q, the student</strong>, gets updated.</p>
 
-    <div class="ppo-box">
-      <div class="ppo-models">
-        <div class="model-card">
-          <div class="model-name">Parent model</div>
-          <div class="model-sub">Original pretrained LLM<br>Distribution = P</div>
-        </div>
-        <div class="arrow-mid mono">fine-tune</div>
-        <div class="model-card">
-          <div class="model-name">Student model</div>
-          <div class="model-sub">Fine-tuned version<br>Distribution = Q</div>
-        </div>
+    <div class="dir-setup">
+      <div class="dir-model dir-model-frozen">
+        <span class="dir-badge dir-badge-frozen mono">Frozen</span>
+        <span class="dir-model-inline"><strong>P — truth / parent</strong> · Fixed reference · never moves during training</span>
       </div>
-      <div class="ppo-formula mono">
-        PPO loss = reward signal <span class="accent">− β · KL(Q ∥ P)</span>
+      <span class="dir-arrow mono">same P · two different losses on Q ↓</span>
+      <div class="dir-model dir-model-train">
+        <span class="dir-badge dir-badge-train mono">Trained</span>
+        <span class="dir-model-inline"><strong>Q — student model</strong> · Starts identical · diverges by loss function</span>
       </div>
-      <p class="ppo-note">The KL term punishes the student for straying too far from the parent.</p>
+    </div>
+
+    <div class="dir-viz">
+      <div class="dir-viz-cols">
+        <span class="dir-viz-col-label mono">KL(P ∥ Q) loss</span>
+        <span class="dir-viz-col-label mono">KL(Q ∥ P) loss</span>
+      </div>
+      <canvas id="dirAnimCanvas" height="128"></canvas>
+      <div class="dir-viz-footer">
+        <span class="dir-viz-step mono" id="dirAnimStep">Step 0 / 48</span>
+        <button type="button" class="dir-viz-replay" id="dirAnimReplay">Replay training</button>
+      </div>
+      <p class="dir-viz-legend mono" id="dirAnimExplain">Purple = P (frozen) · Green = Q (student updating each step)</p>
+    </div>
+
+    <div class="dir-compare">
+      <div class="dir-card dir-card-forward">
+        <h4>Forward · KL(P ∥ Q)</h4>
+        <div class="dir-formula mono">Σ P(x) · log( P(x) / Q(x) )</div>
+        <ul class="dir-points">
+          <li><strong>P weights</strong> the sum · ratio <strong>P/Q</strong></li>
+          <li>Q spreads to <strong>cover all modes</strong> — blurry but inclusive</li>
+          <li>Watch left panel: Q widens across both peaks</li>
+        </ul>
+      </div>
+      <div class="dir-card dir-card-reverse">
+        <h4>Reverse · KL(Q ∥ P)</h4>
+        <div class="dir-formula mono">Σ Q(x) · log( Q(x) / P(x) )</div>
+        <ul class="dir-points">
+          <li><strong>Q weights</strong> the sum · ratio <strong>Q/P</strong></li>
+          <li>Q <strong>locks onto one mode</strong> — sharp, mode-seeking</li>
+          <li>Watch right panel: Q snaps to a single peak</li>
+        </ul>
+      </div>
     </div>
   </section>
 
   <div class="divider"></div>
 
-  <!-- Section 5 — Token by Token -->
-  <section class="section" id="s5" data-label="Token by Token">
-    <div class="section-label mono">05 — Token by Token</div>
-    <h2>A real example: "What is the capital of France?"</h2>
-    <p>The student replies: <em>"The capital of France is Paris"</em>. Each token gets its own probability from both models. Click a token to see how the distributions compare.</p>
+  <!-- Section 5 — The question each KL asks -->
+  <section class="section" id="s5" data-label="The Question">
+    <div class="section-label mono">05 — The Question Each KL Asks</div>
+    <h2>Two different questions — RLHF picks one</h2>
+    <p>Forward and reverse KL are not just swapped formulas. Each one asks a <strong>different question</strong> about frozen P and trained Q. In RLHF, we care far more about the reverse one.</p>
 
-    <div class="token-layout">
-      <div class="token-col-main">
-        <div class="token-scene">
+    <div class="kl-question-compare">
+      <div class="kl-question-card kl-question-forward">
+        <h4>Forward KL(P ∥ Q)</h4>
+        <p class="kl-question-main">"If <strong>P is truth</strong>, where is Q <strong>missing mass</strong> that P cares about?"</p>
+        <p class="kl-question-sub">Expectation under <strong>P</strong> · punishes Q for being too low where P is high · pushes Q to <strong>cover every mode</strong></p>
+      </div>
+      <div class="kl-question-card kl-question-reverse">
+        <h4>Reverse KL(Q ∥ P)</h4>
+        <p class="kl-question-main">"Where <strong>Q actually puts mass</strong>, is it saying things <strong>P would not</strong>?"</p>
+        <p class="kl-question-sub">Expectation under <strong>Q</strong> · punishes Q for being high where P is low · keeps the student <strong>on a leash</strong></p>
+      </div>
+    </div>
+
+    <div class="kl-rlhf-box">
+      <div class="kl-rlhf-header">
+        <span class="kl-rlhf-badge mono">RLHF · PPO</span>
+        <h3>Why reverse KL is what we use</h3>
+      </div>
+      <ul class="kl-rlhf-points">
+        <li><strong>P stays frozen</strong> — the SFT parent we trust. <strong>Q is trained</strong> with reward signals on its own outputs.</li>
+        <li>We only sample from <strong>Q</strong> during RL — reverse KL weights exactly those tokens, asking whether the student is drifting off-policy.</li>
+        <li>Forward KL would force Q to spread across all of P's modes — useful in VI, but <strong>too blurry</strong> for coherent language.</li>
+        <li>Reverse KL is the right guardrail: improve from reward, but stay close to the parent. Hence <span class="mono">reward − β · KL(Q ∥ P)</span>.</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Section 6 — Token by Token -->
+  <section class="section" id="s6" data-label="Token by Token">
+    <div class="section-label mono">06 — Token by Token</div>
+    <h2>Reverse KL on every token the student writes</h2>
+    <p class="token-lead">Ask <em>"What is the capital of France?"</em> — the student replies below. Click any word (or use <span class="mono">← →</span>) to see how far <strong>Q</strong> drifted from frozen parent <strong>P</strong> at that step.</p>
+
+    <div class="token-stage">
+      <div class="token-pick">
+        <div class="token-pick-bar">
+          <span class="token-pick-label mono">Student reply · click a token</span>
           <div class="sentence-box" id="tokenSentence"></div>
         </div>
-        <div class="callout callout-tight">
-          <p>In practice, we only measure KL loss on the <strong>tokens the student actually generates</strong> — not the entire vocabulary. This is the "sample KL" approximation used in real training pipelines.</p>
+        <div class="token-stepper">
+          <button type="button" class="token-nav-btn" id="tokenPrev" disabled aria-label="Previous token">
+            <span class="token-nav-arrow">←</span>
+          </button>
+          <div class="token-dots" id="tokenDots" aria-hidden="true"></div>
+          <span class="token-step-indicator mono" id="tokenStepIndicator">—</span>
+          <button type="button" class="token-nav-btn" id="tokenNext" disabled aria-label="Next token">
+            <span class="token-nav-arrow">→</span>
+          </button>
         </div>
       </div>
-      <div class="token-col-detail" id="tokenDetail">
-        <p class="token-placeholder" id="tokenPlaceholder">Click a token to compare parent vs student distributions.</p>
-        <div class="token-detail-body" id="tokenDetailBody" hidden>
-          <div class="token-detail-header">
-            <span class="token-badge mono" id="tokenTitle"></span>
-            <div class="token-kl-pill mono">
-              <span class="token-kl-val" id="tokenKL">—</span>
-              <span class="token-kl-unit">nats</span>
+
+      <div class="token-detail" id="tokenDetail">
+        <div class="token-detail-head">
+          <div class="token-detail-focus">
+            <span class="token-inspector-label mono">Token</span>
+            <span class="token-badge mono" id="tokenTitle">—</span>
+          </div>
+          <div class="token-kl-pill mono">
+            <span class="token-kl-label">KL(Q∥P)</span>
+            <span class="token-kl-val" id="tokenKL">—</span>
+            <span class="token-kl-unit">nats</span>
+          </div>
+        </div>
+        <p class="token-insight" id="tokenInsight"></p>
+
+        <div class="token-detail-grid">
+          <div class="token-zone token-zone-ctx">
+            <div class="token-zone-title mono">Where we are</div>
+            <div class="token-context-panel" id="tokenContext"></div>
+          </div>
+          <div class="token-zone token-zone-bars">
+            <div class="token-zone-title mono">What each model would say next</div>
+            <div class="token-compare token-compare-stack">
+              <div class="token-model-block token-model-p">
+                <div class="token-model-label">
+                  <span class="dot" style="background:#7F77DD"></span> P · parent (frozen)
+                </div>
+                <div class="token-bar-list" id="parentBars"></div>
+              </div>
+              <div class="token-model-block token-model-q">
+                <div class="token-model-label">
+                  <span class="dot" style="background:#1D9E75"></span> Q · student (trained)
+                </div>
+                <div class="token-bar-list" id="studentBars"></div>
+              </div>
             </div>
           </div>
-          <p id="tokenDesc" class="token-desc"></p>
-          <div class="token-compare">
-            <div class="token-model-block">
-              <div class="token-model-label">
-                <span class="dot" style="background:#7F77DD"></span> Parent model (P)
-              </div>
-              <div class="token-bar-list" id="parentBars"></div>
-            </div>
-            <div class="token-model-block">
-              <div class="token-model-label">
-                <span class="dot" style="background:#1D9E75"></span> Student model (Q)
-              </div>
-              <div class="token-bar-list" id="studentBars"></div>
-            </div>
+          <div class="token-zone token-zone-calc">
+            <div class="token-zone-title mono">Penalty on the word Q picked</div>
+            <div class="token-calc-highlight" id="tokenCalcHighlight"></div>
+            <div class="token-calc-total mono" id="tokenCalcTotal"></div>
+            <p class="token-calc-note">In PPO, we sum KL(Q∥P) across every token the student actually writes.</p>
           </div>
         </div>
       </div>
-    </div>
-  </section>
-
-  <div class="divider"></div>
-
-  <!-- Section 6 — Forward vs Reverse -->
-  <section class="section" id="s6" data-label="Forward vs Reverse">
-    <div class="section-label mono">06 — Forward vs Reverse</div>
-    <h2>KL(P∥Q) vs KL(Q∥P) — does direction matter?</h2>
-    <p>Yes — a lot. They measure different things and lead to different model behaviors.</p>
-
-    <div class="reverse-compare">
-      <div class="rev-card forward">
-        <h4>Forward KL(P ∥ Q)</h4>
-        <p>Penalizes Q for putting low probability where P puts high probability. Q tries to <strong>cover all modes</strong> of P — even if it spreads too thin.</p>
-      </div>
-      <div class="rev-card reverse">
-        <h4>Reverse KL(Q ∥ P)</h4>
-        <p>Penalizes Q for putting high probability where P puts low probability. Q <strong>picks one mode and sharpens</strong> onto it — mode-seeking behavior.</p>
-      </div>
-    </div>
-
-    <p style="margin-top:1rem">The <strong>On-Policy Self-Distillation</strong> method uses reverse KL. The student model generates outputs, then is trained to match its own good generations — making it sharper and more confident.</p>
-
-    <div class="canvas-wrap">
-      <canvas id="reverseCanvas" height="155"></canvas>
-      <div style="display:flex; gap:0.75rem; margin-top:0.75rem; flex-wrap:wrap">
-        <button type="button" class="play-btn" data-kl-mode="forward">Forward KL</button>
-        <button type="button" class="play-btn" data-kl-mode="reverse">Reverse KL</button>
-      </div>
-      <div id="klModeExplain" class="kl-mode-explain"></div>
     </div>
   </section>
 
@@ -238,10 +281,10 @@ import Layout from '../../layouts/Layout.astro';
         <span><strong>KL divergence</strong> measures how different distribution Q is from distribution P.</span>
       </div>
       <div class="recap-item">
-        <span><strong>KL(P∥Q) = Σ P(x) · log(P/Q)</strong> — always non-negative, zero when identical.</span>
+        <span><strong>Forward KL</strong> asks where Q misses P's mass. <strong>Reverse KL</strong> asks where Q oversteps P — the question RLHF actually needs.</span>
       </div>
       <div class="recap-item">
-        <span><strong>In LLMs (PPO)</strong>, it keeps the student model from drifting too far from the parent.</span>
+        <span><strong>RLHF / PPO</strong> uses reverse KL(Q∥P): reward improves Q, but <span class="mono">−β·KL(Q∥P)</span> keeps it near frozen parent P.</span>
       </div>
       <div class="recap-item">
         <span><strong>Reverse KL</strong> is used in self-distillation for sharper, mode-seeking behavior.</span>
@@ -491,15 +534,24 @@ import Layout from '../../layouts/Layout.astro';
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    margin-bottom: 0.85rem;
+    margin-bottom: 0.75rem;
     padding-bottom: 0.65rem;
     border-bottom: 1px solid var(--border);
+  }
+  .calc-panel-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
   }
   .calc-panel-title {
     font-size: 0.72rem;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--text-3);
+  }
+  .calc-panel-sub {
+    font-size: 0.75rem;
+    color: var(--text-2);
   }
   .calc-kl-pill {
     display: inline-flex;
@@ -509,6 +561,7 @@ import Layout from '../../layouts/Layout.astro';
     border-radius: 6px;
     background: #EEEDFE;
     border: 1px solid #AFA9EC;
+    flex-shrink: 0;
   }
   :global([data-theme="dark"]) .calc-kl-pill {
     background: #1d1c35;
@@ -524,218 +577,923 @@ import Layout from '../../layouts/Layout.astro';
     color: var(--text-3);
   }
   :global([data-theme="dark"]) .calc-kl-val { color: #9B93F0; }
-  .calc-sliders {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.75rem;
-    margin-bottom: 0.85rem;
-  }
-  .calc-slider-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0.65rem 0.75rem;
-  }
-  .calc-slider-label {
+
+  .calc-random-btn {
     display: block;
-    font-size: 0.65rem;
-    color: var(--text-2);
-    margin-bottom: 0.45rem;
-    letter-spacing: 0.02em;
-  }
-  .calc-slider-row {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .calc-slider-row input[type=range] {
-    flex: 1;
-    min-width: 0;
-    accent-color: #7F77DD;
+    width: 100%;
+    margin-bottom: 0.75rem;
+    padding: 0.55rem 1rem;
+    border-radius: 7px;
+    border: 1px solid #AFA9EC;
+    background: #EEEDFE;
+    color: #534AB7;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
     cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
   }
-  .calc-slider-val {
+  .calc-random-btn:hover {
+    background: #e0ddf8;
+    border-color: #7F77DD;
+  }
+  :global([data-theme="dark"]) .calc-random-btn {
+    background: #1d1c35;
+    border-color: #3d3870;
+    color: #9B93F0;
+  }
+  :global([data-theme="dark"]) .calc-random-btn:hover {
+    background: #252347;
+    border-color: #7F77DD;
+  }
+
+  .calc-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    gap: 0.85rem;
+    align-items: start;
+  }
+  .calc-penalty-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .calc-stacks {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+  :global(.calc-stack-row) {
+    display: grid;
+    grid-template-columns: 1.5rem 1fr;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  :global(.calc-stack-label) {
+    font-family: "IBM Plex Mono", monospace;
     font-size: 0.72rem;
     font-weight: 500;
     color: var(--text);
-    min-width: 2.25rem;
-    text-align: right;
   }
-  .calc-outcomes {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.65rem;
-  }
-  :global(.calc-outcome) {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0.6rem 0.7rem;
+  :global(.calc-stack-wrap) {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 0.25rem;
   }
-  :global(.calc-outcome-name) {
+  :global(.calc-stack-sub) {
+    font-size: 0.62rem;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  :global(.calc-stack) {
+    display: flex;
+    height: 1.35rem;
+    border-radius: 5px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  :global(.calc-seg) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.58rem;
+    font-weight: 500;
+    color: #fff;
+    min-width: 0;
+    transition: width 0.25s ease;
+  }
+  :global(.calc-seg.rain) { background: #7F77DD; }
+  :global(.calc-seg.sunny) { background: #D4A72C; color: #3d2f00; }
+  :global(.calc-seg.cloudy) { background: #8B9DAF; }
+  :global([data-theme="dark"] .calc-seg.sunny) { color: #fff; }
+  :global(.calc-stack-legend) {
+    font-size: 0.65rem;
+    color: var(--text-3);
+    line-height: 1.4;
+  }
+
+  .calc-penalty-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  :global(.calc-penalty-row) {
+    display: grid;
+    grid-template-columns: 4.25rem 1fr auto;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.4rem 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
     font-size: 0.78rem;
+  }
+  :global(.calc-penalty-name) {
     font-weight: 500;
     color: var(--text);
   }
-  :global(.calc-outcome-contrib) {
-    font-size: 0.68rem;
+  :global(.calc-penalty-math) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    min-width: 0;
+  }
+  :global(.calc-penalty-formula) {
+    font-size: 0.66rem;
+    color: var(--text-2);
+    line-height: 1.35;
+  }
+  :global(.calc-penalty-evals) {
+    font-size: 0.64rem;
+    color: var(--text-3);
+    line-height: 1.35;
+  }
+  :global(.calc-penalty-val) {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #534AB7;
+    white-space: nowrap;
+  }
+  :global([data-theme="dark"] .calc-penalty-val) { color: #9B93F0; }
+  .calc-equation {
+    margin-top: 0.55rem;
+    padding: 0.55rem 0.65rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.72rem;
+    color: var(--text-2);
+    text-align: center;
+  }
+  .calc-equation strong {
     color: #534AB7;
     font-weight: 500;
   }
-  :global([data-theme="dark"] .calc-outcome-contrib) { color: #9B93F0; }
-  :global(.calc-outcome-head) {
+  :global([data-theme="dark"]) .calc-equation strong { color: #9B93F0; }
+
+  @media (max-width: 720px) {
+    .calc-body { grid-template-columns: 1fr; }
+    :global(.calc-penalty-row) {
+      grid-template-columns: 3.75rem 1fr auto;
+      gap: 0.4rem;
+    }
+    :global(.calc-penalty-formula) { font-size: 0.62rem; }
+    :global(.calc-penalty-evals) { font-size: 0.6rem; }
+  }
+
+  /* ── Token by Token (s6) — one viewport, no inner scroll ── */
+  #s6 {
     display: flex;
-    align-items: baseline;
+    flex-direction: column;
+    padding: 0.45rem 0;
+  }
+  #s6 h2 { font-size: 1.12rem; margin-bottom: 0.28rem; flex-shrink: 0; }
+  #s6 .token-lead {
+    font-size: 0.8rem;
+    line-height: 1.45;
+    margin: 0 0 0.35rem;
+    flex-shrink: 0;
+  }
+  #s6 .token-stage {
+    flex: 1;
+    min-height: 0;
+    margin-top: 0;
+    padding: 0.45rem 0.55rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  #s6 .token-pick {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  #s6 .token-pick-bar {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  #s6 .token-pick-label {
+    display: block;
+    padding: 0.28rem 0.55rem;
+    font-size: 0.54rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    border-bottom: 1px solid var(--border);
+    background: rgba(127, 119, 221, 0.04);
+  }
+  #s6 .sentence-box {
+    padding: 0.42rem 0.55rem;
+    font-size: 0.76rem;
+    line-height: 1.55;
+    min-height: 0;
+    flex: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.12rem;
+  }
+  #s6 .token-stepper { flex-shrink: 0; gap: 0.35rem; padding: 0; }
+  #s6 .token-nav-btn { width: 1.6rem; height: 1.6rem; }
+  #s6 .token-detail {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.4rem 0.48rem;
+    overflow: hidden;
+  }
+  #s6 .token-detail-head {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
     justify-content: space-between;
     gap: 0.5rem;
+    padding-bottom: 0.22rem;
+    border-bottom: 1px solid var(--border);
   }
-  :global(.calc-prob-row) {
-    display: grid;
-    grid-template-columns: 1.1rem 1fr 2.25rem;
+  #s6 .token-detail-focus {
+    display: flex;
     align-items: center;
     gap: 0.4rem;
   }
-  :global(.calc-prob-label) {
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 0.62rem;
-    font-weight: 500;
-    color: #534AB7;
-  }
-  :global(.calc-prob-label.is-q) { color: #1D9E75; }
-  :global(.calc-prob-pct) {
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 0.62rem;
-    text-align: right;
+  #s6 .token-badge { font-size: 0.76rem; padding: 2px 9px; }
+  #s6 .token-kl-val { font-size: 0.82rem; }
+  #s6 .token-insight {
+    flex-shrink: 0;
+    margin: 0;
+    font-size: 0.72rem;
+    line-height: 1.4;
     color: var(--text-2);
   }
-  :global(.calc-math) {
+  #s6 .token-detail-grid {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.15fr) minmax(0, 0.88fr);
+    gap: 0.35rem;
+    overflow: hidden;
+  }
+  #s6 .token-zone {
+    min-height: 0;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
+    gap: 0.22rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.32rem 0.38rem;
+    background: var(--surface);
+  }
+  #s6 .token-zone-title {
+    flex-shrink: 0;
+    margin: 0;
+    padding-bottom: 0.18rem;
+    border-bottom: 1px dashed var(--border);
+  }
+  #s6 .token-context-panel {
+    flex: 1;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  #s6 .token-compare-stack {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.22rem;
+    overflow: hidden;
+  }
+  #s6 .token-model-block {
+    padding: 0.28rem 0.32rem;
+    min-height: 0;
+    overflow: hidden;
+  }
+  #s6 .token-model-label { font-size: 0.52rem; margin-bottom: 0.16rem; }
+  #s6 .token-bar-list { gap: 0.14rem; }
+  #s6 :global(.hbar-row) { grid-template-columns: 2.35rem 1fr 1.65rem; gap: 0.22rem; }
+  #s6 :global(.hbar-tok) { font-size: 0.52rem; }
+  #s6 :global(.hbar-track) { height: 4px; }
+  #s6 :global(.hbar-pct) { font-size: 0.5rem; }
+  #s6 :global(.hbar-row.is-pick) {
+    background: rgba(29, 158, 117, 0.06);
+    border-radius: 4px;
+    padding: 0 0.12rem;
+  }
+  #s6 :global(.hbar-row.is-pick .hbar-tok) { font-weight: 600; color: var(--text); }
+  #s6 .token-calc-highlight {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+  #s6 :global(.token-calc-hero) {
+    width: 100%;
+    padding: 0.35rem 0.42rem;
+    border-radius: 6px;
+    border: 1px solid #5DCAA5;
+    background: linear-gradient(90deg, rgba(29, 158, 117, 0.08), var(--surface) 55%);
+    box-shadow: inset 3px 0 0 #1D9E75;
+  }
+  #s6 :global([data-theme="dark"] .token-calc-hero) {
+    border-color: #1D6B50;
+    background: linear-gradient(90deg, rgba(29, 158, 117, 0.14), var(--surface) 55%);
+  }
+  #s6 :global(.token-calc-word) {
+    display: block;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #085041;
+    margin-bottom: 0.18rem;
+  }
+  #s6 :global([data-theme="dark"] .token-calc-word) { color: #5DCAA5; }
+  #s6 :global(.token-calc-formula) {
+    display: block;
+    font-size: 0.58rem;
+    color: var(--text-2);
+    line-height: 1.35;
+    word-break: break-all;
+  }
+  #s6 .token-calc-total {
+    flex-shrink: 0;
+    font-size: 0.56rem;
+    padding: 0.2rem 0.32rem;
+    text-align: center;
+  }
+  #s6 .token-calc-note {
+    flex-shrink: 0;
+    margin: 0;
+    font-size: 0.54rem;
+    line-height: 1.35;
+    color: var(--text-3);
+  }
+  #s6 :global(.token) { font-size: 0.72rem; padding: 2px 8px 2px 6px; margin: 1px; }
+  #s6 :global(.token-slot) { font-size: 0.5rem; }
+  #s6 :global(.token.active) { transform: none; box-shadow: 0 2px 8px rgba(29, 158, 117, 0.2); }
+
+  :global(.token-ctx-simple) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+    height: 100%;
+    justify-content: center;
+  }
+  :global(.token-ctx-row) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    font-size: 0.62rem;
+    line-height: 1.35;
+    color: var(--text-2);
+    min-width: 0;
+  }
+  :global(.token-ctx-row-now) {
+    padding: 0.22rem 0.28rem;
+    border-radius: 5px;
+    background: rgba(29, 158, 117, 0.06);
+    border: 1px solid rgba(93, 202, 165, 0.35);
+  }
+  :global([data-theme="dark"] .token-ctx-row-now) {
+    background: rgba(29, 158, 117, 0.1);
+    border-color: rgba(29, 107, 80, 0.5);
+  }
+  :global(.token-ctx-kicker) {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-3);
+  }
+  :global(.token-ctx-now) {
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 500;
+    font-size: 0.72rem;
+    color: #085041;
+  }
+  :global([data-theme="dark"] .token-ctx-now) { color: #5DCAA5; }
+  :global(.token-ctx-val) {
     font-family: "IBM Plex Mono", monospace;
     font-size: 0.6rem;
-    color: var(--text-3);
-    padding-top: 0.25rem;
-    border-top: 1px solid var(--border-soft);
-  }
-  :global(.calc-math span:last-child) {
-    color: #534AB7;
-    font-weight: 500;
-  }
-  :global([data-theme="dark"] .calc-math span:last-child) { color: #9B93F0; }
-  .calc-note {
-    font-size: 0.78rem;
-    color: var(--text-2);
-    line-height: 1.5;
-    margin: 0.75rem 0 0;
-  }
-  .calc-note strong { color: var(--text); font-weight: 500; }
-
-  @media (max-width: 720px) {
-    .calc-sliders,
-    .calc-outcomes { grid-template-columns: 1fr; }
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  /* ── Token side-by-side ── */
-  .token-layout {
+  .token-stage {
+    position: relative;
+    margin-top: 0.35rem;
+    padding: 0.85rem 0.95rem 0.65rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background:
+      radial-gradient(ellipse 80% 60% at 10% 0%, rgba(127, 119, 221, 0.07), transparent 55%),
+      radial-gradient(ellipse 70% 50% at 95% 100%, rgba(29, 158, 117, 0.06), transparent 50%),
+      var(--surface);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
+  }
+  :global([data-theme="dark"]) .token-stage {
+    background:
+      radial-gradient(ellipse 80% 60% at 10% 0%, rgba(127, 119, 221, 0.12), transparent 55%),
+      radial-gradient(ellipse 70% 50% at 95% 100%, rgba(29, 158, 117, 0.1), transparent 50%),
+      var(--surface);
+  }
+
+  .token-stage-grid {
     display: grid;
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-    gap: 1.25rem;
+    grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+    gap: 0.85rem;
     align-items: stretch;
   }
-  .token-scene { margin: 0.35rem 0 0; }
-  .token-col-detail {
+
+  .token-trace {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    min-width: 0;
+  }
+
+  .token-prompt-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.45rem 0.65rem;
+    border-radius: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid #7F77DD;
+  }
+  .token-prompt-glyph {
+    font-size: 0.58rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #534AB7;
+    flex-shrink: 0;
+  }
+  :global([data-theme="dark"]) .token-prompt-glyph { color: #9B93F0; }
+  .token-prompt-quote {
+    font-size: 0.78rem;
+    color: var(--text-2);
+    font-style: italic;
+    font-family: "Lora", serif;
+    line-height: 1.35;
+  }
+
+  .token-trace-card {
+    flex: 1;
     background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 10px;
-    padding: 1rem 1.1rem;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  }
+  :global([data-theme="dark"]) .token-trace-card {
+    box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+  }
+  .token-trace-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    border-bottom: 1px solid var(--border);
+    background: rgba(127, 119, 221, 0.04);
+  }
+  .token-trace-hint {
+    color: #7F77DD;
+    opacity: 0.75;
+  }
+
+  .sentence-box {
+    padding: 1rem 1.1rem 1.1rem;
+    font-size: 0.9rem;
+    line-height: 2.4;
+    letter-spacing: 0.01em;
+    min-height: 5.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    align-items: center;
+    gap: 0.15rem;
+  }
+
+  .token-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.15rem 0;
+  }
+  .token-nav-btn {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-2);
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s, background 0.15s, color 0.15s;
+  }
+  .token-nav-btn:hover:not(:disabled) {
+    border-color: #AFA9EC;
+    color: #534AB7;
+    background: #EEEDFE;
+    transform: translateY(-1px);
+  }
+  .token-nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  :global([data-theme="dark"]) .token-nav-btn:hover:not(:disabled) {
+    background: #1d1c35;
+    color: #9B93F0;
+    border-color: #3d3870;
+  }
+  .token-nav-arrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.85rem;
+    line-height: 1;
+  }
+  .token-dots {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0 0.25rem;
+  }
+  :global(.token-dot) {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  }
+  :global(.token-dot:hover) {
+    background: #AFA9EC;
+    transform: scale(1.2);
+  }
+  :global(.token-dot.active) {
+    background: #1D9E75;
+    box-shadow: 0 0 0 3px rgba(29, 158, 117, 0.2);
+    transform: scale(1.15);
+  }
+  :global([data-theme="dark"] .token-dot.active) {
+    box-shadow: 0 0 0 3px rgba(93, 202, 165, 0.15);
+  }
+  .token-step-indicator {
+    font-size: 0.64rem;
+    color: var(--text-3);
+    min-width: 2.75rem;
+    text-align: center;
+  }
+
+  .token-footnote {
+    margin: 0.55rem 0 0;
+    text-align: center;
+    font-size: 0.6rem;
+    color: var(--text-3);
+    letter-spacing: 0.02em;
+  }
+
+  .token-inspector {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.75rem 0.85rem;
     min-height: 14rem;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    overflow: hidden;
   }
-  .token-col-detail.is-populated {
+  .token-inspector.is-populated {
     justify-content: flex-start;
+    max-height: none;
+    overflow: hidden;
   }
-  .token-placeholder {
-    font-size: 0.8rem;
-    color: var(--text-3);
-    line-height: 1.55;
-    margin: 0;
+  .token-inspector-idle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
     text-align: center;
+    padding: 1.5rem 1rem;
   }
-  .token-detail-body {
+  .token-idle-icon {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--border);
+    letter-spacing: -0.04em;
+  }
+  .token-inspector-idle p {
+    font-size: 0.78rem;
+    color: var(--text-3);
+    line-height: 1.5;
+    margin: 0;
+    max-width: 14rem;
+  }
+  .token-inspector-idle strong {
+    color: var(--text-2);
+    font-weight: 500;
+  }
+
+  .token-inspector-body {
     display: flex;
     flex-direction: column;
     gap: 0.55rem;
     width: 100%;
+    min-height: 0;
   }
-  .token-detail-header {
+  .token-inspector-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.75rem;
+    gap: 0.65rem;
     flex-wrap: wrap;
+    padding-bottom: 0.45rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .token-inspector-title {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+  .token-inspector-label {
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-3);
   }
   .token-badge {
-    font-size: 0.82rem;
+    font-size: 0.88rem;
     font-weight: 500;
-    padding: 5px 11px;
+    padding: 4px 12px;
     border-radius: 6px;
-    background: #EEEDFE;
+    background: linear-gradient(135deg, #EEEDFE, #e8e6fa);
     color: #534AB7;
     border: 1px solid #AFA9EC;
+    box-shadow: 0 1px 2px rgba(83, 74, 183, 0.08);
   }
   :global([data-theme="dark"]) .token-badge {
-    background: #1d1c35;
+    background: linear-gradient(135deg, #1d1c35, #252347);
     color: #9B93F0;
     border-color: #3d3870;
   }
   .token-kl-pill {
     display: inline-flex;
     align-items: baseline;
-    gap: 0.35rem;
-    padding: 4px 10px;
-    border-radius: 6px;
+    gap: 0.3rem;
+    padding: 5px 11px;
+    border-radius: 20px;
     background: var(--surface);
     border: 1px solid var(--border);
+  }
+  .token-kl-label {
+    font-size: 0.58rem;
+    color: var(--text-3);
+    margin-right: 0.1rem;
   }
   .token-kl-val {
-    font-size: 0.9rem;
+    font-size: 0.92rem;
     font-weight: 500;
-    color: #534AB7;
+    color: #0F6E56;
   }
   .token-kl-unit {
-    font-size: 0.62rem;
+    font-size: 0.58rem;
     color: var(--text-3);
   }
-  :global([data-theme="dark"]) .token-kl-val { color: #9B93F0; }
-  .token-desc {
-    font-size: 0.8rem;
-    margin: 0;
-    color: var(--text-2);
-    line-height: 1.5;
-  }
-  .token-compare {
+  :global([data-theme="dark"]) .token-kl-val { color: #5DCAA5; }
+
+  .token-zone {
     display: flex;
     flex-direction: column;
-    gap: 0.65rem;
-    margin-top: 0.15rem;
+    gap: 0.35rem;
   }
-  .token-model-block {
+  .token-zone-title {
+    font-size: 0.58rem;
+    font-weight: 500;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin: 0;
+    padding-bottom: 0.2rem;
+    border-bottom: 1px dashed var(--border);
+  }
+
+  .token-context-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0.15rem 0;
+  }
+  :global(.token-ctx-step) {
+    display: grid;
+    grid-template-columns: 1.1rem 1fr;
+    gap: 0.5rem;
+    align-items: start;
+    padding: 0.35rem 0;
+    position: relative;
+  }
+  :global(.token-ctx-step:not(:last-child)::before) {
+    content: '';
+    position: absolute;
+    left: 0.45rem;
+    top: 1.35rem;
+    bottom: -0.1rem;
+    width: 1px;
+    background: var(--border);
+  }
+  :global(.token-ctx-marker) {
+    width: 0.9rem;
+    height: 0.9rem;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--bg);
+    margin-top: 0.1rem;
+    flex-shrink: 0;
+  }
+  :global(.token-ctx-step.is-active .token-ctx-marker) {
+    border-color: #1D9E75;
+    background: #E1F5EE;
+    box-shadow: 0 0 0 3px rgba(29, 158, 117, 0.15);
+  }
+  :global([data-theme="dark"] .token-ctx-step.is-active .token-ctx-marker) {
+    background: #0d2e25;
+    border-color: #5DCAA5;
+  }
+  :global(.token-ctx-step.is-past .token-ctx-marker) {
+    border-color: #AFA9EC;
+    background: #EEEDFE;
+  }
+  :global(.token-ctx-body) {
+    min-width: 0;
+  }
+  :global(.token-ctx-label) {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-3);
+    display: block;
+    margin-bottom: 0.15rem;
+  }
+  :global(.token-ctx-step.is-active .token-ctx-label) { color: #0F6E56; }
+  :global(.token-ctx-val) {
+    font-size: 0.72rem;
+    color: var(--text-2);
+    line-height: 1.45;
+  }
+  :global(.token-ctx-tok) {
+    display: inline-block;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.64rem;
+    padding: 2px 7px;
+    margin: 1px 3px 1px 0;
+    border-radius: 4px;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0.65rem 0.75rem;
+    color: var(--text);
   }
-  .token-model-label {
+  :global(.token-ctx-current) {
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 500;
+    font-size: 0.78rem;
+    color: #085041;
+    background: linear-gradient(135deg, #E1F5EE, #d4f0e8);
+    border: 1px solid #5DCAA5;
+    padding: 3px 10px;
+    border-radius: 6px;
+    display: inline-block;
+    box-shadow: 0 2px 8px rgba(15, 110, 86, 0.12);
+  }
+  :global([data-theme="dark"] .token-ctx-current) {
+    color: #5DCAA5;
+    background: linear-gradient(135deg, #0d2e25, #0f3a2e);
+    border-color: #1D6B50;
+  }
+  :global(.token-ctx-empty) {
+    color: var(--text-3);
+    font-style: italic;
     font-size: 0.68rem;
+  }
+
+  .token-calc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+  }
+  :global(.token-calc-row) {
+    display: grid;
+    grid-template-columns: 3.5rem 1fr auto;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.72rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  :global(.token-calc-row.is-generated) {
+    border-color: #5DCAA5;
+    background: linear-gradient(90deg, rgba(29, 158, 117, 0.06), var(--surface) 40%);
+    box-shadow: inset 3px 0 0 #1D9E75;
+  }
+  :global([data-theme="dark"] .token-calc-row.is-generated) {
+    border-color: #1D6B50;
+    background: linear-gradient(90deg, rgba(29, 158, 117, 0.12), var(--surface) 40%);
+  }
+  :global(.token-calc-name) {
     font-weight: 500;
     color: var(--text);
-    margin-bottom: 0.45rem;
+  }
+  :global(.token-calc-math) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.06rem;
+    min-width: 0;
+  }
+  :global(.token-calc-formula) {
+    font-size: 0.6rem;
+    color: var(--text-2);
+    line-height: 1.3;
+  }
+  :global(.token-calc-evals) {
+    font-size: 0.56rem;
+    color: var(--text-3);
+    line-height: 1.3;
+  }
+  :global(.token-calc-val) {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: #534AB7;
+    white-space: nowrap;
+  }
+  :global([data-theme="dark"] .token-calc-val) { color: #9B93F0; }
+  .token-calc-total {
+    font-size: 0.63rem;
+    color: var(--text-2);
+    padding: 0.4rem 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    text-align: center;
+    line-height: 1.45;
+  }
+  .token-calc-total strong {
+    color: #0F6E56;
+    font-weight: 500;
+  }
+  :global([data-theme="dark"]) .token-calc-total strong { color: #5DCAA5; }
+
+  .token-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem;
+  }
+  .token-model-block {
+    border-radius: 8px;
+    padding: 0.5rem 0.55rem;
+    border: 1px solid var(--border);
+  }
+  .token-model-p {
+    background: linear-gradient(160deg, rgba(127, 119, 221, 0.06), var(--surface));
+    border-color: rgba(175, 169, 236, 0.5);
+  }
+  .token-model-q {
+    background: linear-gradient(160deg, rgba(29, 158, 117, 0.06), var(--surface));
+    border-color: rgba(93, 202, 165, 0.45);
+  }
+  .token-model-label {
+    font-size: 0.6rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 0.35rem;
     display: flex;
     align-items: center;
     gap: 5px;
@@ -743,8 +1501,62 @@ import Layout from '../../layouts/Layout.astro';
   .token-bar-list {
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: 0.28rem;
   }
+
+  :global(.token) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 4px 11px 4px 8px;
+    border-radius: 7px;
+    margin: 2px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s, border-color 0.2s;
+    border: 1px solid rgba(93, 202, 165, 0.45);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.8rem;
+    background: var(--bg);
+    color: var(--text-2);
+  }
+  :global(.token-slot) {
+    font-size: 0.55rem;
+    color: var(--text-3);
+    opacity: 0.7;
+  }
+  :global(.token:hover) {
+    border-color: #5DCAA5;
+    color: #085041;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(15, 110, 86, 0.1);
+  }
+  :global([data-theme="dark"] .token:hover) {
+    color: #5DCAA5;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.25);
+  }
+  :global(.token.active) {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 4px 14px rgba(29, 158, 117, 0.22);
+    background: linear-gradient(135deg, #1D9E75, #0F6E56);
+    color: #fff;
+    border-color: #0a5c47;
+  }
+  :global(.token.active .token-slot) { color: rgba(255,255,255,0.65); }
+  :global(.token.context-past) {
+    background: linear-gradient(135deg, #EEEDFE, #f5f4fd);
+    color: #534AB7;
+    border-color: #AFA9EC;
+  }
+  :global([data-theme="dark"] .token.context-past) {
+    background: linear-gradient(135deg, #1d1c35, #252347);
+    color: #9B93F0;
+    border-color: #3d3870;
+  }
+  :global(.token.context-future) {
+    opacity: 0.42;
+    border-style: dashed;
+  }
+
   :global(.hbar-row) {
     display: grid;
     grid-template-columns: 4.25rem 1fr 2.5rem;
@@ -813,6 +1625,370 @@ import Layout from '../../layouts/Layout.astro';
   }
   .formula { font-size: 1.05rem; color: var(--text); }
   .formula-sub { font-size: 0.78rem; color: var(--text-2); margin-top: 0.5rem; }
+  .formula-box-compact {
+    padding: 0.85rem 1rem;
+    margin: 0.5rem 0 0.65rem;
+  }
+  .formula-box-compact .formula { font-size: 0.95rem; }
+  .formula-box-compact .formula-sub { font-size: 0.72rem; margin-top: 0.35rem; }
+
+  /* ── Direction compare (s4) ── */
+  .dir-setup {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0.45rem 0 0.55rem;
+    padding: 0.5rem 0.65rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .dir-model {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 0;
+    padding: 0.4rem 0.55rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .dir-model-frozen {
+    background: #EEEDFE;
+    border-color: #AFA9EC;
+  }
+  .dir-model-train {
+    background: #E1F5EE;
+    border-color: #5DCAA5;
+  }
+  :global([data-theme="dark"]) .dir-model-frozen {
+    background: #1d1c35;
+    border-color: #3d3870;
+  }
+  :global([data-theme="dark"]) .dir-model-train {
+    background: #0d2e25;
+    border-color: #1D6B50;
+  }
+  .dir-badge {
+    font-size: 0.58rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .dir-badge-frozen {
+    background: #534AB7;
+    color: #fff;
+  }
+  .dir-badge-train {
+    background: #0F6E56;
+    color: #fff;
+  }
+  .dir-model-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+  .dir-model-inline {
+    font-size: 0.68rem;
+    color: var(--text-2);
+    line-height: 1.35;
+    min-width: 0;
+  }
+  .dir-model-inline strong {
+    font-weight: 500;
+    color: var(--text);
+  }
+  .dir-model-name {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .dir-model-sub {
+    font-size: 0.68rem;
+    color: var(--text-2);
+    line-height: 1.35;
+  }
+  .dir-arrow {
+    flex-shrink: 0;
+    font-size: 0.6rem;
+    color: var(--text-3);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    padding: 0 0.15rem;
+  }
+  .dir-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 0.35rem;
+  }
+  .dir-card {
+    border-radius: 8px;
+    padding: 0.75rem 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+  .dir-card-forward {
+    background: #EEEDFE;
+    border: 1px solid #AFA9EC;
+  }
+  .dir-card-reverse {
+    background: #E1F5EE;
+    border: 1px solid #5DCAA5;
+  }
+  :global([data-theme="dark"]) .dir-card-forward {
+    background: #1d1c35;
+    border-color: #3d3870;
+  }
+  :global([data-theme="dark"]) .dir-card-reverse {
+    background: #0d2e25;
+    border-color: #1D6B50;
+  }
+  .dir-card h4 {
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .dir-card-forward h4 { color: #3C3489; }
+  .dir-card-reverse h4 { color: #085041; }
+  :global([data-theme="dark"]) .dir-card-forward h4 { color: #9B93F0; }
+  :global([data-theme="dark"]) .dir-card-reverse h4 { color: #5DCAA5; }
+  .dir-formula {
+    font-size: 0.72rem;
+    color: var(--text);
+    padding: 0.4rem 0.5rem;
+    background: rgba(255,255,255,0.45);
+    border-radius: 5px;
+    text-align: center;
+  }
+  :global([data-theme="dark"]) .dir-formula {
+    background: rgba(0,0,0,0.2);
+  }
+  .dir-points {
+    margin: 0;
+    padding: 0 0 0 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    color: var(--text-2);
+    line-height: 1.45;
+  }
+  .dir-points strong { color: var(--text); font-weight: 500; }
+  .dir-card-forward .dir-points { color: #534AB7; }
+  .dir-card-reverse .dir-points { color: #0F6E56; }
+  :global([data-theme="dark"]) .dir-card-forward .dir-points { color: #8880d8; }
+  :global([data-theme="dark"]) .dir-card-reverse .dir-points { color: #3aaa88; }
+  .dir-card-forward .dir-points strong { color: #3C3489; }
+  .dir-card-reverse .dir-points strong { color: #085041; }
+  :global([data-theme="dark"]) .dir-card-forward .dir-points strong { color: #9B93F0; }
+  :global([data-theme="dark"]) .dir-card-reverse .dir-points strong { color: #5DCAA5; }
+
+  /* ── Direction animation (s4) ── */
+  .dir-viz {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.65rem 0.75rem 0.55rem;
+    margin: 0.55rem 0 0.65rem;
+  }
+  .dir-viz-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+  }
+  .dir-viz-col-label {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: center;
+    color: var(--text-3);
+  }
+  .dir-viz-col-label:first-child { color: #534AB7; }
+  .dir-viz-col-label:last-child { color: #0F6E56; }
+  :global([data-theme="dark"]) .dir-viz-col-label:first-child { color: #9B93F0; }
+  :global([data-theme="dark"]) .dir-viz-col-label:last-child { color: #5DCAA5; }
+  #dirAnimCanvas {
+    display: block;
+    width: 100%;
+    border-radius: 6px;
+    background: var(--bg);
+  }
+  .dir-viz-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    margin-top: 0.45rem;
+    flex-wrap: wrap;
+  }
+  .dir-viz-step {
+    font-size: 0.66rem;
+    color: var(--text-2);
+  }
+  .dir-viz-replay {
+    padding: 0.35rem 0.7rem;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-2);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.64rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .dir-viz-replay:hover {
+    border-color: #AFA9EC;
+    color: #534AB7;
+    background: #EEEDFE;
+  }
+  :global([data-theme="dark"]) .dir-viz-replay:hover {
+    background: #1d1c35;
+    color: #9B93F0;
+    border-color: #3d3870;
+  }
+  .dir-viz-legend {
+    font-size: 0.62rem;
+    color: var(--text-3);
+    margin: 0.4rem 0 0;
+    text-align: center;
+    line-height: 1.4;
+  }
+  #s4 .dir-compare { margin-top: 0.35rem; }
+  #s4 p { margin-bottom: 0.45rem; }
+  #s4 .dir-setup { margin-bottom: 0.45rem; }
+
+  /* ── KL question section (s5) ── */
+  .kl-question-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.7rem;
+    margin: 0.5rem 0 0.65rem;
+  }
+  .kl-question-card {
+    border-radius: 8px;
+    padding: 0.75rem 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .kl-question-forward {
+    background: #EEEDFE;
+    border: 1px solid #AFA9EC;
+  }
+  .kl-question-reverse {
+    background: #E1F5EE;
+    border: 1px solid #5DCAA5;
+  }
+  :global([data-theme="dark"]) .kl-question-forward {
+    background: #1d1c35;
+    border-color: #3d3870;
+  }
+  :global([data-theme="dark"]) .kl-question-reverse {
+    background: #0d2e25;
+    border-color: #1D6B50;
+  }
+  .kl-question-card h4 {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .kl-question-forward h4 { color: #3C3489; }
+  .kl-question-reverse h4 { color: #085041; }
+  :global([data-theme="dark"]) .kl-question-forward h4 { color: #9B93F0; }
+  :global([data-theme="dark"]) .kl-question-reverse h4 { color: #5DCAA5; }
+  .kl-question-main {
+    font-size: 0.82rem;
+    color: var(--text);
+    line-height: 1.45;
+    margin: 0;
+    font-style: italic;
+    font-family: "Lora", serif;
+  }
+  .kl-question-main strong { font-style: normal; font-weight: 500; }
+  .kl-question-sub {
+    font-size: 0.68rem;
+    color: var(--text-2);
+    line-height: 1.45;
+    margin: 0;
+  }
+  .kl-question-forward .kl-question-sub { color: #534AB7; }
+  .kl-question-reverse .kl-question-sub { color: #0F6E56; }
+  :global([data-theme="dark"]) .kl-question-forward .kl-question-sub { color: #8880d8; }
+  :global([data-theme="dark"]) .kl-question-reverse .kl-question-sub { color: #3aaa88; }
+
+  .kl-rlhf-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid #0F6E56;
+    border-radius: 0 8px 8px 0;
+    padding: 0.75rem 0.9rem;
+  }
+  .kl-rlhf-header {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.45rem;
+  }
+  .kl-rlhf-badge {
+    font-size: 0.58rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: #0F6E56;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .kl-rlhf-header h3 {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+  }
+  .kl-rlhf-points {
+    margin: 0;
+    padding: 0 0 0 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.74rem;
+    color: var(--text-2);
+    line-height: 1.45;
+  }
+  .kl-rlhf-points strong { color: var(--text); font-weight: 500; }
+  .kl-rlhf-points .mono {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.7rem;
+    color: #085041;
+  }
+  :global([data-theme="dark"]) .kl-rlhf-points .mono { color: #5DCAA5; }
+  #s5 p { margin-bottom: 0.45rem; }
+
+  @media (max-width: 820px) {
+    .dir-setup {
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    .dir-arrow {
+      width: 100%;
+      text-align: center;
+      padding: 0;
+    }
+    .dir-model { flex: 1 1 calc(50% - 0.5rem); }
+    .kl-question-compare { grid-template-columns: 1fr; }
+  }
 
   /* ── Props list ── */
   .props-list { display: flex; flex-direction: column; gap: 0.6rem; margin: 0.75rem 0; }
@@ -872,68 +2048,58 @@ import Layout from '../../layouts/Layout.astro';
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 1.25rem;
-    margin: 1.25rem 0;
+    padding: 1rem 1.1rem;
+    margin: 0.65rem 0 0;
   }
-  .ppo-models {
+  .ppo-stack {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.45rem;
+    margin-bottom: 0.85rem;
+    max-width: 22rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .ppo-arrow-down {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-3);
+    letter-spacing: 0.04em;
   }
   .model-card {
-    flex: 1;
-    min-width: 120px;
     background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 6px;
-    padding: 0.85rem 1rem;
+    padding: 0.75rem 0.9rem;
     text-align: center;
   }
-  .model-name { font-size: 0.85rem; font-weight: 500; color: var(--text); }
-  .model-sub { font-size: 0.75rem; color: var(--text-2); margin-top: 0.35rem; line-height: 1.5; }
-  .arrow-mid { font-size: 0.875rem; color: var(--text-3); align-self: center; white-space: nowrap; }
+  .model-card-source {
+    border-color: #AFA9EC;
+    background: #EEEDFE;
+  }
+  .model-card-student {
+    border-color: #5DCAA5;
+    background: #E1F5EE;
+  }
+  :global([data-theme="dark"]) .model-card-source {
+    background: #1d1c35;
+    border-color: #3d3870;
+  }
+  :global([data-theme="dark"]) .model-card-student {
+    background: #0d2e25;
+    border-color: #1D6B50;
+  }
+  .model-name { font-size: 0.82rem; font-weight: 500; color: var(--text); }
+  .model-card-source .model-name { color: #3C3489; }
+  .model-card-student .model-name { color: #085041; }
+  :global([data-theme="dark"]) .model-card-source .model-name { color: #9B93F0; }
+  :global([data-theme="dark"]) .model-card-student .model-name { color: #5DCAA5; }
+  .model-sub { font-size: 0.72rem; color: var(--text-2); margin-top: 0.3rem; line-height: 1.45; }
   .ppo-formula { font-size: 0.875rem; color: var(--text-2); margin-bottom: 0.5rem; }
   .ppo-formula .accent { color: #534AB7; font-weight: 500; }
   .ppo-note { font-size: 0.825rem; color: var(--text-2); margin: 0; }
   :global([data-theme="dark"]) .ppo-formula .accent { color: #9B93F0; }
-
-  /* ── Token scene ── */
-  .token-scene { margin: 0.35rem 0 0; }
-  .sentence-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 1rem 1.25rem;
-    font-size: 0.925rem;
-    line-height: 2.6;
-    letter-spacing: 0.01em;
-  }
-  :global(.token) {
-    display: inline-block;
-    padding: 2px 9px;
-    border-radius: 5px;
-    margin: 2px;
-    cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-    border: 1px solid transparent;
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 0.825rem;
-    background: #E1F5EE;
-    color: #085041;
-    border-color: #5DCAA5;
-  }
-  :global([data-theme="dark"] .token) {
-    background: #0d2e25;
-    color: #5DCAA5;
-    border-color: #1D6B50;
-  }
-  :global(.token.active) {
-    transform: scale(1.12);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-  }
 
   /* ── Dist bars ── */
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin: 0.75rem 0; }
@@ -965,56 +2131,17 @@ import Layout from '../../layouts/Layout.astro';
   :global(.bar-tok) { font-size: 0.6rem; font-family: "IBM Plex Mono", monospace; color: var(--text-2); text-align: center; word-break: break-all; }
   :global(.bar-pct) { font-size: 0.6rem; font-weight: 500; text-align: center; }
 
-  /* ── Reverse KL ── */
-  .reverse-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin: 0.5rem 0; }
-  #s6 .canvas-wrap { margin-bottom: 0.5rem; }
-  #s6 p { margin-bottom: 0.45rem; }
-  .rev-card { border-radius: 8px; padding: 1rem 1.1rem; }
-  .rev-card.forward { background: #EEEDFE; border: 1px solid #AFA9EC; }
-  .rev-card.reverse { background: #E1F5EE; border: 1px solid #5DCAA5; }
-  :global([data-theme="dark"]) .rev-card.forward { background: #1d1c35; border-color: #3d3870; }
-  :global([data-theme="dark"]) .rev-card.reverse { background: #0d2e25; border-color: #1D6B50; }
-  .rev-card h4 { font-size: 0.85rem; font-weight: 500; margin-bottom: 0.4rem; }
-  .rev-card p { font-size: 0.8rem; margin: 0; line-height: 1.55; }
-  .rev-card.forward h4 { color: #3C3489; }
-  .rev-card.reverse h4 { color: #085041; }
-  .rev-card.forward p { color: #534AB7; }
-  .rev-card.reverse p { color: #0F6E56; }
-  :global([data-theme="dark"]) .rev-card.forward h4 { color: #9B93F0; }
-  :global([data-theme="dark"]) .rev-card.reverse h4 { color: #5DCAA5; }
-  :global([data-theme="dark"]) .rev-card.forward p { color: #8880d8; }
-  :global([data-theme="dark"]) .rev-card.reverse p { color: #3aaa88; }
-  .play-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 6px 14px;
-    border-radius: 6px;
-    background: var(--surface);
-    color: var(--text-2);
-    font-size: 0.8rem;
-    font-weight: 500;
-    border: 1px solid var(--border);
-    cursor: pointer;
-    transition: all 0.15s;
-    font-family: inherit;
-  }
-  .play-btn:hover { background: var(--surface-warm); color: var(--text); }
-  .kl-mode-explain {
-    font-size: 0.8rem;
-    color: var(--text-2);
-    margin-top: 0.5rem;
-    min-height: 2.4rem;
-    line-height: 1.5;
-  }
-
   /* ── Recap ── */
   .recap-list { display: flex; flex-direction: column; gap: 0.75rem; margin: 1rem 0; }
   .recap-item { font-size: 0.9rem; color: var(--text-2); line-height: 1.6; }
   .recap-item strong { color: var(--text); font-weight: 500; }
 
   @media (max-width: 720px) {
-    .token-layout { grid-template-columns: 1fr; }
+    #s6 .token-detail-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+    #s6 .token-zone-ctx { grid-column: 1 / -1; }
   }
 
   @media (max-height: 760px) {
@@ -1026,69 +2153,253 @@ import Layout from '../../layouts/Layout.astro';
     .canvas-wrap canvas { max-height: 140px; }
     .dist-bars { height: 72px; }
     .calc-panel { padding: 0.75rem 0.85rem; }
-    .calc-sliders { gap: 0.5rem; margin-bottom: 0.6rem; }
-    .calc-slider-card { padding: 0.5rem 0.6rem; }
     .calc-kl-val { font-size: 0.95rem; }
+    :global(.calc-stack) { height: 1.1rem; }
+    :global(.calc-penalty-row) { padding: 0.32rem 0.45rem; }
+    :global(.calc-penalty-formula) { font-size: 0.62rem; }
+    :global(.calc-penalty-evals) { font-size: 0.6rem; }
+    .calc-equation { margin-top: 0.35rem; padding: 0.45rem 0.55rem; font-size: 0.66rem; }
+    .token-inspector { padding: 0.65rem 0.75rem; }
+    .token-compare { gap: 0.35rem; }
+    :global(.token-calc-formula) { font-size: 0.56rem; }
+    :global(.token-calc-evals) { font-size: 0.54rem; }
+    :global(.hbar-track) { height: 5px; }
+    .dir-card { padding: 0.6rem 0.7rem; }
+    .dir-points { font-size: 0.66rem; gap: 0.28rem; }
+    .dir-formula { font-size: 0.66rem; }
+    .dir-model { padding: 0.35rem 0.45rem; }
+    .dir-model-inline { font-size: 0.62rem; }
+    .dir-setup { padding: 0.4rem 0.5rem; }
+    #dirAnimCanvas { max-height: 110px; }
+    .dir-viz { padding: 0.5rem 0.6rem; }
+    .kl-question-card { padding: 0.6rem 0.7rem; }
+    .kl-question-main { font-size: 0.76rem; }
+    .kl-rlhf-points { font-size: 0.68rem; }
+    #s6 h2 { font-size: 1rem; margin-bottom: 0.2rem; }
+    #s6 .token-lead { font-size: 0.72rem; margin-bottom: 0.25rem; }
+    #s6 .token-stage { padding: 0.35rem 0.42rem; gap: 0.3rem; }
+    #s6 .sentence-box { font-size: 0.66rem; line-height: 1.45; padding: 0.32rem 0.42rem; }
+    #s6 :global(.token) { font-size: 0.64rem; padding: 1px 6px; }
+    #s6 .token-insight { font-size: 0.66rem; }
+    #s6 .token-detail-grid { gap: 0.28rem; }
+    #s6 .token-zone { padding: 0.26rem 0.3rem; }
+    #s6 :global(.token-calc-formula) { font-size: 0.52rem; }
+    #s6 :global(.hbar-track) { height: 3px; }
+    #s6 .token-calc-note { font-size: 0.5rem; }
+    :global(.token-ctx-row) { font-size: 0.56rem; }
+    :global(.token-ctx-val) { font-size: 0.54rem; }
   }
 
   @media (max-width: 500px) {
-    .two-col, .reverse-compare { grid-template-columns: 1fr; }
-    .ppo-models { flex-direction: column; }
+    .two-col, .dir-compare { grid-template-columns: 1fr; }
   }
 </style>
 
 <script>
 const CANVAS_H = 155;
 
+function fmtCalcProb(v) {
+  return v.toFixed(2);
+}
+
+function fmtCalcContrib(v) {
+  const s = Math.abs(v).toFixed(3);
+  return (v >= 0 ? '+' : '−') + s;
+}
+
+function fmtCalcSum(contribs) {
+  return contribs.map((c, i) => {
+    if (c == null) return '—';
+    if (i === 0) return fmtCalcContrib(c);
+    return (c >= 0 ? ' + ' : ' − ') + Math.abs(c).toFixed(3);
+  }).join('');
+}
+
 /* ─────────── Token data ─────────── */
+let selectedTokenIndex = -1;
+
 const tokenData = [
-  { text: "The", desc: "A very common starting word. Both models agree strongly here.", parent: [{t:"The",p:0.72},{t:"A",p:0.15},{t:"Paris",p:0.08},{t:"France",p:0.05}], student: [{t:"The",p:0.68},{t:"A",p:0.18},{t:"Paris",p:0.10},{t:"France",p:0.04}], kl: 0.003 },
-  { text: "capital", desc: "After 'The', 'capital' is a strong prediction from both models.", parent: [{t:"capital",p:0.65},{t:"city",p:0.20},{t:"heart",p:0.10},{t:"answer",p:0.05}], student: [{t:"capital",p:0.70},{t:"city",p:0.18},{t:"heart",p:0.08},{t:"answer",p:0.04}], kl: 0.002 },
-  { text: "of", desc: "Grammatically constrained. Very high agreement.", parent: [{t:"of",p:0.88},{t:"city",p:0.07},{t:"in",p:0.03},{t:"for",p:0.02}], student: [{t:"of",p:0.90},{t:"city",p:0.05},{t:"in",p:0.03},{t:"for",p:0.02}], kl: 0.001 },
-  { text: "France", desc: "Key factual token. Both models are confident here.", parent: [{t:"France",p:0.80},{t:"Paris",p:0.10},{t:"Europe",p:0.07},{t:"the",p:0.03}], student: [{t:"France",p:0.75},{t:"Paris",p:0.14},{t:"Europe",p:0.08},{t:"the",p:0.03}], kl: 0.006 },
-  { text: "is", desc: "Simple linking verb. Very aligned.", parent: [{t:"is",p:0.82},{t:"was",p:0.10},{t:"has",p:0.05},{t:"remains",p:0.03}], student: [{t:"is",p:0.79},{t:"was",p:0.12},{t:"has",p:0.06},{t:"remains",p:0.03}], kl: 0.002 },
-  { text: "Paris", desc: "The answer! Both models very confident. The student sharpens slightly after fine-tuning.", parent: [{t:"Paris",p:0.91},{t:"Lyon",p:0.04},{t:"Marseille",p:0.03},{t:"Nice",p:0.02}], student: [{t:"Paris",p:0.95},{t:"Lyon",p:0.02},{t:"Marseille",p:0.02},{t:"Nice",p:0.01}], kl: 0.008 },
+  { text: "The", parent: [{t:"The",p:0.72},{t:"A",p:0.15},{t:"Paris",p:0.08},{t:"France",p:0.05}], student: [{t:"The",p:0.68},{t:"A",p:0.18},{t:"Paris",p:0.10},{t:"France",p:0.04}] },
+  { text: "capital", parent: [{t:"capital",p:0.65},{t:"city",p:0.20},{t:"heart",p:0.10},{t:"answer",p:0.05}], student: [{t:"capital",p:0.70},{t:"city",p:0.18},{t:"heart",p:0.08},{t:"answer",p:0.04}] },
+  { text: "of", parent: [{t:"of",p:0.88},{t:"city",p:0.07},{t:"in",p:0.03},{t:"for",p:0.02}], student: [{t:"of",p:0.90},{t:"city",p:0.05},{t:"in",p:0.03},{t:"for",p:0.02}] },
+  { text: "France", parent: [{t:"France",p:0.80},{t:"Paris",p:0.10},{t:"Europe",p:0.07},{t:"the",p:0.03}], student: [{t:"France",p:0.75},{t:"Paris",p:0.14},{t:"Europe",p:0.08},{t:"the",p:0.03}] },
+  { text: "is", parent: [{t:"is",p:0.82},{t:"was",p:0.10},{t:"has",p:0.05},{t:"remains",p:0.03}], student: [{t:"is",p:0.79},{t:"was",p:0.12},{t:"has",p:0.06},{t:"remains",p:0.03}] },
+  { text: "Paris", parent: [{t:"Paris",p:0.91},{t:"Lyon",p:0.04},{t:"Marseille",p:0.03},{t:"Nice",p:0.02}], student: [{t:"Paris",p:0.95},{t:"Lyon",p:0.02},{t:"Marseille",p:0.02},{t:"Nice",p:0.01}] },
 ];
+
+function computeTokenReverseKL(parent, student, generatedText) {
+  const pmap = Object.fromEntries(parent.map(x => [x.t, x.p]));
+  let kl = 0;
+  const contribs = [];
+  const rows = student.map(s => {
+    const q = s.p;
+    const p = pmap[s.t] ?? 0;
+    const isGenerated = s.t === generatedText;
+    if (q < 0.001 || p < 0.001) {
+      contribs.push(null);
+      const pStr = fmtCalcProb(p);
+      const qStr = fmtCalcProb(q);
+      return {
+        html: `<div class="token-calc-hero">
+          <span class="token-calc-word">${s.t}</span>
+          <span class="token-calc-formula mono">${qStr} × log(${qStr}/${pStr}) ≈ 0</span>
+        </div>`,
+        sample: null,
+        isGenerated,
+      };
+    }
+    const logRatio = Math.log(q / p);
+    const contrib = q * logRatio;
+    kl += contrib;
+    contribs.push(contrib);
+    const pStr = fmtCalcProb(p);
+    const qStr = fmtCalcProb(q);
+    const contribStr = fmtCalcContrib(contrib);
+    return {
+      html: `<div class="token-calc-hero">
+        <span class="token-calc-word">${s.t}</span>
+        <span class="token-calc-formula mono">${qStr} × log(${qStr}/${pStr}) = ${contribStr}</span>
+      </div>`,
+      sample: isGenerated ? contrib : null,
+      isGenerated,
+    };
+  });
+  const sampleKL = rows.find(r => r.isGenerated)?.sample;
+  return { kl: Math.max(0, kl), contribs, rows, sampleKL };
+}
+
+function getTokenInsight(d, kl) {
+  const gen = d.text;
+  const pGen = d.parent.find(x => x.t === gen)?.p ?? 0;
+  const qGen = d.student.find(x => x.t === gen)?.p ?? 0;
+  const delta = qGen - pGen;
+  if (kl < 0.008) {
+    return `Q and P agree on "${gen}" — almost no drift at this step.`;
+  }
+  if (delta > 0.04) {
+    return `Q is more confident than P on "${gen}" — that extra mass is what reverse KL penalizes.`;
+  }
+  if (delta < -0.04) {
+    return `Q is less sure than P about "${gen}" — still a mismatch, but the penalty stays small here.`;
+  }
+  return `Q's next-token guess differs slightly from P on "${gen}" — modest KL penalty.`;
+}
+
+function renderTokenContext(i) {
+  const el = document.getElementById('tokenContext');
+  if (!el) return;
+  const prefix = tokenData.slice(0, i).map(t => t.text).join(' · ');
+  const suffix = tokenData.slice(i + 1).map(t => t.text).join(' · ');
+  const current = tokenData[i].text;
+
+  el.innerHTML = `<div class="token-ctx-simple">
+    <div class="token-ctx-row">
+      <span class="token-ctx-kicker">Already written</span>
+      <span class="token-ctx-val">${prefix || '—'}</span>
+    </div>
+    <div class="token-ctx-row token-ctx-row-now">
+      <span class="token-ctx-kicker">Predicting now</span>
+      <span class="token-ctx-now">${current}</span>
+    </div>
+    <div class="token-ctx-row">
+      <span class="token-ctx-kicker">Still to come</span>
+      <span class="token-ctx-val">${suffix || '—'}</span>
+    </div>
+  </div>`;
+}
+
+function renderTokenDots() {
+  const el = document.getElementById('tokenDots');
+  if (!el) return;
+  el.innerHTML = tokenData.map((_, i) =>
+    `<button type="button" class="token-dot" data-token-dot="${i}" aria-label="Token ${i + 1}"></button>`
+  ).join('');
+  el.querySelectorAll('.token-dot').forEach(btn => {
+    btn.addEventListener('click', () => selectToken(+btn.dataset.tokenDot));
+  });
+}
+
+function updateTokenNav(i) {
+  const prev = document.getElementById('tokenPrev');
+  const next = document.getElementById('tokenNext');
+  const indicator = document.getElementById('tokenStepIndicator');
+  if (prev) prev.disabled = i <= 0;
+  if (next) next.disabled = i >= tokenData.length - 1;
+  if (indicator) indicator.textContent = `${i + 1} / ${tokenData.length}`;
+  document.querySelectorAll('.token-dot').forEach((dot, idx) => {
+    dot.classList.toggle('active', idx === i);
+  });
+}
+
+function updateTokenHighlight(i) {
+  document.querySelectorAll('.token').forEach((tok, idx) => {
+    tok.classList.remove('active', 'context-past', 'context-future');
+    if (idx === i) tok.classList.add('active');
+    else if (idx < i) tok.classList.add('context-past');
+    else tok.classList.add('context-future');
+  });
+}
 
 /* ─────────── Render token sentence ─────────── */
 function renderTokenSentence() {
   const el = document.getElementById('tokenSentence');
   if (!el) return;
   el.innerHTML = tokenData.map((t, i) =>
-    `<span class="token" data-token-index="${i}" role="button" tabindex="0">${t.text}</span>`
+    `<span class="token" data-token-index="${i}" role="button" tabindex="0">
+      <span class="token-slot">${String(i + 1).padStart(2, '0')}</span>${t.text}
+    </span>`
   ).join(' ');
 }
 
 function selectToken(i) {
-  document.querySelectorAll('.token').forEach(t => t.classList.remove('active'));
-  const tok = document.querySelector(`[data-token-index="${i}"]`);
-  if (tok) tok.classList.add('active');
+  if (i < 0 || i >= tokenData.length) return;
+  selectedTokenIndex = i;
   const d = tokenData[i];
-  const detail = document.getElementById('tokenDetail');
-  const placeholder = document.getElementById('tokenPlaceholder');
-  const body = document.getElementById('tokenDetailBody');
-  if (placeholder) placeholder.hidden = true;
-  if (body) body.hidden = false;
-  if (detail) detail.classList.add('is-populated');
+  updateTokenHighlight(i);
+  updateTokenNav(i);
+
   const title = document.getElementById('tokenTitle');
   if (title) title.textContent = d.text;
-  const desc = document.getElementById('tokenDesc');
-  if (desc) desc.textContent = d.desc;
-  renderTokenBars('parentBars', d.parent, '#7F77DD');
-  renderTokenBars('studentBars', d.student, '#1D9E75');
-  const kl = document.getElementById('tokenKL');
-  if (kl) kl.textContent = d.kl.toFixed(4);
+
+  renderTokenContext(i);
+
+  const { kl, rows } = computeTokenReverseKL(d.parent, d.student, d.text);
+  const genRow = rows.find(r => r.isGenerated);
+  const calcHighlight = document.getElementById('tokenCalcHighlight');
+  if (calcHighlight) calcHighlight.innerHTML = genRow?.html ?? '';
+  const calcTotal = document.getElementById('tokenCalcTotal');
+  if (calcTotal) {
+    calcTotal.innerHTML = `Total KL(Q∥P) = <strong>${kl.toFixed(4)}</strong> nats · top candidates at this step`;
+  }
+
+  const klEl = document.getElementById('tokenKL');
+  if (klEl) klEl.textContent = kl.toFixed(4);
+
+  const insight = document.getElementById('tokenInsight');
+  if (insight) insight.textContent = getTokenInsight(d, kl);
+
+  renderTokenBars('parentBars', d.parent, '#7F77DD', d.text);
+  renderTokenBars('studentBars', d.student, '#1D9E75', d.text);
 }
 
-function renderTokenBars(elId, data, color) {
+function stepToken(delta) {
+  if (selectedTokenIndex < 0) {
+    selectToken(delta > 0 ? 0 : tokenData.length - 1);
+    return;
+  }
+  selectToken(Math.max(0, Math.min(tokenData.length - 1, selectedTokenIndex + delta)));
+}
+
+function renderTokenBars(elId, data, color, highlightTok) {
   const el = document.getElementById(elId);
   if (!el) return;
   el.innerHTML = data.map(d => {
     const pct = Math.round(d.p * 100);
-    return `<div class="hbar-row">
-      <span class="hbar-tok">${d.t}</span>
+    const isPick = highlightTok && d.t === highlightTok;
+    return `<div class="hbar-row${isPick ? ' is-pick' : ''}">
+      <span class="hbar-tok">${d.t}${isPick ? ' ✓' : ''}</span>
       <div class="hbar-track">
-        <div class="hbar-fill" data-width="${pct}" style="background:${color};opacity:0.88"></div>
+        <div class="hbar-fill" data-width="${pct}" style="background:${color};opacity:${isPick ? 1 : 0.88}"></div>
       </div>
       <span class="hbar-pct" style="color:${color}">${pct}%</span>
     </div>`;
@@ -1190,127 +2501,269 @@ function updateMainDist() {
   drawDists('distCanvas', pv, qv, 0.14, 0.14, '#7F77DD', '#1D9E75');
 }
 
-/* ─────────── KL table calculator ─────────── */
-function computeKL() {
-  const p0 = +document.getElementById('p0').value / 100;
-  const q0 = +document.getElementById('q0').value / 100;
-  const split = +document.getElementById('split').value / 100;
-  document.getElementById('p0val').textContent = Math.round(p0 * 100) + '%';
-  document.getElementById('q0val').textContent = Math.round(q0 * 100) + '%';
-  document.getElementById('splitval').textContent = Math.round(split * 100) + '%';
+/* ─────────── KL live calculator ─────────── */
+const CALC_OUTCOMES = ['Rain', 'Sunny', 'Cloudy'];
+const CALC_SEG_CLASS = { Rain: 'rain', Sunny: 'sunny', Cloudy: 'cloudy' };
+let calcP = [0.5, 0.3, 0.2];
+let calcQ = [0.2, 0.5, 0.3];
 
-  const remP = 1 - p0, remQ = 1 - q0;
-  const outcomes = [
-    { name: 'Rain',   p: p0,               q: q0              },
-    { name: 'Sunny',  p: remP * split,     q: remQ * split    },
-    { name: 'Cloudy', p: remP * (1-split), q: remQ * (1-split) },
-  ];
+function randomDist() {
+  const raw = CALC_OUTCOMES.map(() => 0.05 + Math.random() * 0.9);
+  const sum = raw.reduce((a, b) => a + b, 0);
+  return raw.map(v => v / sum);
+}
+
+function shuffleCalc() {
+  calcP = randomDist();
+  calcQ = randomDist();
+  computeKL();
+}
+
+function getCalcOutcomes() {
+  return CALC_OUTCOMES.map((name, i) => ({ name, p: calcP[i], q: calcQ[i] }));
+}
+
+function renderCalcStacks(outcomes) {
+  const el = document.getElementById('calcStacks');
+  if (!el) return;
+
+  const renderStack = (label, key, subtitle) => {
+    const segs = outcomes.map(o => {
+      const pct = Math.round(o[key] * 100);
+      const cls = CALC_SEG_CLASS[o.name] || '';
+      const labelInside = pct >= 14 ? `${pct}%` : '';
+      return `<div class="calc-seg ${cls}" style="width:${pct}%">${labelInside}</div>`;
+    }).join('');
+    const legend = outcomes.map(o => `${o.name} ${Math.round(o[key] * 100)}%`).join(' · ');
+    return `<div class="calc-stack-row">
+      <span class="calc-stack-label">${label}</span>
+      <div class="calc-stack-wrap">
+        <span class="calc-stack-sub">${subtitle}</span>
+        <div class="calc-stack">${segs}</div>
+        <div class="calc-stack-legend">${legend}</div>
+      </div>
+    </div>`;
+  };
+
+  el.innerHTML = renderStack('P', 'p', 'truth') + renderStack('Q', 'q', 'forecast');
+}
+
+function computeKL() {
+  const outcomes = getCalcOutcomes();
+  renderCalcStacks(outcomes);
 
   let kl = 0;
-  const cards = outcomes.map(o => {
-    const pPct = Math.round(o.p * 100);
-    const qPct = Math.round(o.q * 100);
+  const contribs = [];
+  const rows = outcomes.map(o => {
+    const pStr = fmtCalcProb(o.p);
+    const qStr = fmtCalcProb(o.q);
     if (o.p < 0.001 || o.q < 0.001) {
-      return `<div class="calc-outcome">
-        <div class="calc-outcome-head">
-          <span class="calc-outcome-name">${o.name}</span>
-          <span class="calc-outcome-contrib">—</span>
+      contribs.push(null);
+      return `<div class="calc-penalty-row">
+        <span class="calc-penalty-name">${o.name}</span>
+        <div class="calc-penalty-math mono">
+          <span class="calc-penalty-formula">${pStr} × log(${pStr} / ${qStr})</span>
+          <span class="calc-penalty-evals">both P and Q must be &gt; 0</span>
         </div>
-        <div class="calc-prob-row">
-          <span class="calc-prob-label">P</span>
-          <div class="hbar-track"><div class="hbar-fill" style="width:${pPct}%;background:#7F77DD;opacity:0.88"></div></div>
-          <span class="calc-prob-pct">${pPct}%</span>
-        </div>
-        <div class="calc-prob-row">
-          <span class="calc-prob-label is-q">Q</span>
-          <div class="hbar-track"><div class="hbar-fill" style="width:${qPct}%;background:#1D9E75;opacity:0.88"></div></div>
-          <span class="calc-prob-pct">${qPct}%</span>
-        </div>
-        <div class="calc-math"><span>log(P/Q) undefined</span><span>P · log(P/Q) —</span></div>
+        <span class="calc-penalty-val">—</span>
       </div>`;
     }
-    const logr = Math.log(o.p / o.q);
-    const contrib = o.p * logr;
+    const logRatio = Math.log(o.p / o.q);
+    const contrib = o.p * logRatio;
     kl += contrib;
-    return `<div class="calc-outcome">
-      <div class="calc-outcome-head">
-        <span class="calc-outcome-name">${o.name}</span>
-        <span class="calc-outcome-contrib">${contrib.toFixed(4)}</span>
+    contribs.push(contrib);
+    const logStr = logRatio.toFixed(3);
+    const contribStr = fmtCalcContrib(contrib);
+    return `<div class="calc-penalty-row">
+      <span class="calc-penalty-name">${o.name}</span>
+      <div class="calc-penalty-math mono">
+        <span class="calc-penalty-formula">${pStr} × log(${pStr} / ${qStr})</span>
+        <span class="calc-penalty-evals">= ${pStr} × ${logStr} = ${contribStr}</span>
       </div>
-      <div class="calc-prob-row">
-        <span class="calc-prob-label">P</span>
-        <div class="hbar-track"><div class="hbar-fill" style="width:${pPct}%;background:#7F77DD;opacity:0.88"></div></div>
-        <span class="calc-prob-pct">${pPct}%</span>
-      </div>
-      <div class="calc-prob-row">
-        <span class="calc-prob-label is-q">Q</span>
-        <div class="hbar-track"><div class="hbar-fill" style="width:${qPct}%;background:#1D9E75;opacity:0.88"></div></div>
-        <span class="calc-prob-pct">${qPct}%</span>
-      </div>
-      <div class="calc-math">
-        <span>log(P/Q) = ${logr.toFixed(3)}</span>
-        <span>P · log(P/Q) = ${contrib.toFixed(4)}</span>
-      </div>
+      <span class="calc-penalty-val">${contribStr}</span>
     </div>`;
   });
 
   const breakdown = document.getElementById('klBreakdown');
-  if (breakdown) breakdown.innerHTML = cards.join('');
+  if (breakdown) breakdown.innerHTML = rows.join('');
+
+  const total = Math.max(0, kl);
+  const equation = document.getElementById('klEquation');
+  if (equation) {
+    const parts = contribs.map(c => c == null ? '—' : fmtCalcContrib(c));
+    equation.innerHTML = parts.every(p => p !== '—')
+      ? `${fmtCalcSum(contribs)} = <strong>${total.toFixed(3)}</strong> nats`
+      : `Align P and Q on every outcome → penalty drops to <strong>0</strong>`;
+  }
 
   const klRes = document.getElementById('klResult');
-  if (klRes) klRes.textContent = Math.max(0, kl).toFixed(4);
+  if (klRes) klRes.textContent = total.toFixed(3);
 }
 
-/* ─────────── Reverse KL viz ─────────── */
-let klMode = 'forward';
-function showKLMode(mode) {
-  klMode = mode;
-  const canvas = document.getElementById('reverseCanvas');
+/* ─────────── Direction training animation (s4) ─────────── */
+const DIR_CANVAS_H = 128;
+const DIR_ANIM_STEPS = 48;
+const DIR_ANIM_MS = 2400;
+
+let dirAnimProgress = 0;
+let dirAnimFrame = null;
+let dirAnimStart = 0;
+let dirAnimVisible = false;
+
+function bimodalP(x) {
+  return 0.5 * gaussian(x, 0.25, 0.09) + 0.5 * gaussian(x, 0.72, 0.09);
+}
+
+function easeTrain(t) {
+  return 1 - Math.pow(1 - t, 2.4);
+}
+
+function qForwardAt(x, e) {
+  const mu = 0.5 + (0.48 - 0.5) * e;
+  const sig = 0.16 + (0.24 - 0.16) * e;
+  const amp = 1 + (0.58 - 1) * e;
+  return amp * gaussian(x, mu, sig);
+}
+
+function qReverseAt(x, e) {
+  const mu = 0.5 + (0.26 - 0.5) * e;
+  const sig = 0.16 + (0.075 - 0.16) * e;
+  return gaussian(x, mu, sig);
+}
+
+function drawDirCurve(ctx, x0, panelW, baseY, plotH, fn, color, fillAlpha) {
+  const vals = [];
+  for (let px = 0; px <= panelW; px++) vals.push(fn(px / panelW));
+  const mx = Math.max(...vals, 0.001);
+  ctx.beginPath();
+  vals.forEach((v, px) => {
+    const sy = baseY - (v / mx) * plotH;
+    px === 0 ? ctx.moveTo(x0 + px, sy) : ctx.lineTo(x0 + px, sy);
+  });
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.2;
+  ctx.stroke();
+  ctx.lineTo(x0 + panelW, baseY);
+  ctx.lineTo(x0, baseY);
+  ctx.closePath();
+  ctx.fillStyle = color + Math.round(fillAlpha * 255).toString(16).padStart(2, '0');
+  ctx.fill();
+}
+
+function drawDirAnim(progress) {
+  const canvas = document.getElementById('dirAnimCanvas');
   if (!canvas) return;
   const dpr = window.devicePixelRatio || 1;
-  const W = canvas.parentElement.clientWidth - 32;
-  const baseY = CANVAS_H - 37;
-  const plotH = CANVAS_H - 52;
+  const wrap = canvas.parentElement;
+  const W = Math.max(280, wrap.clientWidth - 24);
+  const baseY = DIR_CANVAS_H - 28;
+  const plotH = DIR_CANVAS_H - 44;
   canvas.width = W * dpr;
-  canvas.height = CANVAS_H * dpr;
+  canvas.height = DIR_CANVAS_H * dpr;
   canvas.style.width = W + 'px';
-  canvas.style.height = CANVAS_H + 'px';
+  canvas.style.height = DIR_CANVAS_H + 'px';
   const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-  ctx.clearRect(0, 0, W, CANVAS_H);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, DIR_CANVAS_H);
 
-  function bimodal(x) {
-    return 0.5 * gaussian(x, 0.25, 0.09) + 0.5 * gaussian(x, 0.72, 0.09);
-  }
-  function drawFn(fn, color, alpha) {
-    let vals = [];
-    for (let px = 0; px <= W; px++) vals.push(fn(px / W));
-    const mx = Math.max(...vals);
+  const gap = 10;
+  const panelW = (W - gap) / 2;
+  const e = easeTrain(progress);
+  const gridColor = isDark() ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+
+  [0, panelW + gap].forEach((x0, i) => {
+    ctx.save();
     ctx.beginPath();
-    vals.forEach((v, px) => {
-      const sy = baseY - (v / mx) * plotH;
-      px === 0 ? ctx.moveTo(px, sy) : ctx.lineTo(px, sy);
-    });
-    ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.stroke();
-    ctx.lineTo(W, baseY); ctx.lineTo(0, baseY); ctx.closePath();
-    ctx.fillStyle = color + Math.round(alpha * 255).toString(16).padStart(2, '0');
-    ctx.fill();
-  }
+    ctx.rect(x0, 18, panelW, DIR_CANVAS_H - 18);
+    ctx.clip();
+    for (let gx = x0; gx <= x0 + panelW; gx += panelW / 4) {
+      ctx.beginPath();
+      ctx.strokeStyle = gridColor;
+      ctx.lineWidth = 0.5;
+      ctx.moveTo(gx, 22);
+      ctx.lineTo(gx, baseY);
+      ctx.stroke();
+    }
+    drawDirCurve(ctx, x0, panelW, baseY, plotH, bimodalP, '#7F77DD', 0.2);
+    const qFn = i === 0
+      ? x => qForwardAt(x, e)
+      : x => qReverseAt(x, e);
+    drawDirCurve(ctx, x0, panelW, baseY, plotH, qFn, '#1D9E75', 0.2);
+    ctx.restore();
+  });
 
-  drawFn(bimodal, '#7F77DD', 0.18);
-  if (mode === 'forward') {
-    drawFn(x => 0.55 * gaussian(x, 0.48, 0.23), '#1D9E75', 0.18);
-    const el = document.getElementById('klModeExplain');
-    if (el) el.textContent = 'Forward KL: Q (green) spreads wide to cover both peaks of P — it covers all modes but blurs precision.';
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = isDark() ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(panelW + gap / 2, 16);
+  ctx.lineTo(panelW + gap / 2, DIR_CANVAS_H - 6);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.font = '500 10px "IBM Plex Mono", monospace';
+  ctx.fillStyle = '#7F77DD';
+  ctx.fillText('P frozen', 8, 12);
+  ctx.fillStyle = '#1D9E75';
+  ctx.fillText('Q training', 72, 12);
+
+  const step = Math.round(progress * DIR_ANIM_STEPS);
+  const stepEl = document.getElementById('dirAnimStep');
+  if (stepEl) stepEl.textContent = `Step ${step} / ${DIR_ANIM_STEPS}`;
+
+  const explain = document.getElementById('dirAnimExplain');
+  if (explain) {
+    if (progress < 0.08) {
+      explain.textContent = 'Both Q models start identical. P (purple) stays fixed — only Q (green) moves.';
+    } else if (progress < 0.95) {
+      explain.textContent = 'Left: forward KL pushes Q to spread across both peaks. Right: reverse KL pulls Q onto one peak.';
+    } else {
+      explain.textContent = 'Same frozen P, same starting Q — different loss, different final student.';
+    }
+  }
+}
+
+function tickDirAnim(now) {
+  if (!dirAnimVisible) return;
+  const t = Math.min(1, (now - dirAnimStart) / DIR_ANIM_MS);
+  dirAnimProgress = t;
+  drawDirAnim(t);
+  if (t < 1) {
+    dirAnimFrame = requestAnimationFrame(tickDirAnim);
   } else {
-    drawFn(x => gaussian(x, 0.26, 0.08), '#1D9E75', 0.18);
-    const el = document.getElementById('klModeExplain');
-    if (el) el.textContent = 'Reverse KL: Q (green) snaps to just one peak of P — sharp and confident, but ignores the other mode entirely.';
+    dirAnimFrame = null;
   }
+}
 
-  ctx.font = `500 11px "IBM Plex Mono", monospace`;
-  ctx.fillStyle = '#7F77DD'; ctx.fillText('P — bimodal truth', 10, 16);
-  ctx.fillStyle = '#1D9E75'; ctx.fillText('Q — approximation', 10, 30);
+function startDirAnim() {
+  cancelAnimationFrame(dirAnimFrame);
+  dirAnimProgress = 0;
+  dirAnimStart = performance.now();
+  drawDirAnim(0);
+  dirAnimFrame = requestAnimationFrame(tickDirAnim);
+}
+
+function initDirAnim() {
+  const canvas = document.getElementById('dirAnimCanvas');
+  const section = document.getElementById('s4');
+  if (!canvas || !section) return;
+
+  document.getElementById('dirAnimReplay')?.addEventListener('click', startDirAnim);
+
+  const observer = new IntersectionObserver((entries) => {
+    const visible = entries[0]?.isIntersecting;
+    if (visible && !dirAnimVisible) {
+      dirAnimVisible = true;
+      startDirAnim();
+    } else if (!visible) {
+      dirAnimVisible = false;
+      cancelAnimationFrame(dirAnimFrame);
+      dirAnimFrame = null;
+    }
+  }, { threshold: 0.35 });
+
+  observer.observe(section);
+  drawDirAnim(dirAnimProgress);
 }
 
 /* ─────────── Section index ─────────── */
@@ -1319,9 +2772,9 @@ const SECTIONS = [
   { id: 's1', label: 'Distributions' },
   { id: 's2', label: 'The Formula' },
   { id: 's3', label: 'Live Calc' },
-  { id: 's4', label: 'KL in LLMs' },
-  { id: 's5', label: 'Token by Token' },
-  { id: 's6', label: 'Forward vs Reverse' },
+  { id: 's4', label: 'Which Direction' },
+  { id: 's5', label: 'The Question' },
+  { id: 's6', label: 'Token by Token' },
   { id: 's7', label: 'Recap' },
 ];
 
@@ -1423,28 +2876,37 @@ function initInteractions() {
     selectToken(+token.dataset.tokenIndex);
   });
 
-  document.querySelectorAll('[data-kl-mode]').forEach(btn => {
-    btn.addEventListener('click', () => showKLMode(btn.dataset.klMode));
+  document.getElementById('tokenPrev')?.addEventListener('click', () => stepToken(-1));
+  document.getElementById('tokenNext')?.addEventListener('click', () => stepToken(1));
+
+  window.addEventListener('keydown', (e) => {
+    if (activeSectionId !== 's6') return;
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
+    e.preventDefault();
+    stepToken(e.key === 'ArrowRight' ? 1 : -1);
   });
 
   document.getElementById('pPeak')?.addEventListener('input', updateMainDist);
   document.getElementById('qPeak')?.addEventListener('input', updateMainDist);
-  ['p0', 'q0', 'split'].forEach(id => document.getElementById(id)?.addEventListener('input', computeKL));
+  document.getElementById('calcRandom')?.addEventListener('click', shuffleCalc);
 }
 
 /* ─────────── Init ─────────── */
 window.addEventListener('load', () => {
   renderTokenSentence();
+  renderTokenDots();
   initInteractions();
+  selectToken(0);
   updateMainDist();
   computeKL();
-  showKLMode('forward');
   initSectionNav();
   initProgress();
+  initDirAnim();
 });
 
 window.addEventListener('resize', () => {
   updateMainDist();
-  showKLMode(klMode);
+  drawDirAnim(dirAnimProgress);
 });
 </script>
