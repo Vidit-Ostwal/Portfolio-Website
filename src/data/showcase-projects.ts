@@ -11,6 +11,20 @@ export type ShowcaseProject = {
 
 export const showcaseProjects: ShowcaseProject[] = [
   {
+    name: 'Automating 3D Survival Playing',
+    tagline:
+      'Autonomous vision-language agent that plays Survival 3D on YouTube Playables — screenshots the game, reads goals from the UI, plans movement, and executes keyboard actions in a loop.',
+    github: 'https://github.com/Vidit-Ostwal/Automating-3DSurvival-Playing',
+    made: 'Jun 2026',
+    xPost: 'https://x.com/ViditOstwal/status/2066886438399139953',
+    bullets: [
+      'Closed-loop agent on YouTube Playables: capture screenshot → read goal, progress, and inventory → plan 1–2 compass moves → send key presses → persist memory for the next cycle.',
+      'GoalMakerLLM reads the game UI and picks the fastest heading; PlannerLLM turns that into concrete NORTH/SOUTH/EAST/WEST steps — each component can use OpenAI or local Ollama vision models.',
+      'MemoryManager keeps JSON knowledge of mechanics, discoveries, and failed strategies; RunLogger saves per-cycle screenshots and run.json under outputs/.',
+      'Playwright + Chrome with a persistent browser profile for one-time YouTube login; uv-based Python 3.11+ setup with configurable GAME_URL and model providers.',
+    ],
+  },
+  {
     name: 'Automatic UI Fixing Harness',
     tagline:
       'Black-box UI defect discovery for locally hosted web apps — Playwright exploration, LLM-assisted goals and verification, and an HTML findings report.',
