@@ -1,0 +1,6 @@
+/**
+ * Custom media tokens — values must match src/lib/breakpoints.ts
+ * Loaded globally via PostCSS (see astro.config.mjs).
+ */
+@custom-media --mobile (max-width: 640px);
+@custom-media --mobile-sm (max-width: 520px);

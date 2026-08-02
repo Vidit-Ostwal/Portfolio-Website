@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import MobileTimelineNav from '../components/MobileTimelineNav.astro';
 import { experience, type EmploymentType } from '../data/experience';
 
 const employmentTypeOrder: EmploymentType[] = ['Full Time', 'Part Time', 'Contract', 'Internship'];
@@ -26,8 +27,18 @@ const employmentTypes = employmentTypeOrder.filter((type) =>
   <div class="timeline-wrap">
     <div class="timeline-spine" aria-hidden="true"></div>
 
-    {experience.map((role) => (
-        <div class="fade-in timeline-row" data-employment-type={role.employmentType}>
+    {experience.map((role, index) => (
+        <div
+          class="fade-in timeline-row"
+          data-employment-type={role.employmentType}
+          data-role-index={index}
+          data-start={role.start}
+          data-end={role.end}
+          data-nav-label={role.title}
+          data-nav-date={role.end}
+          data-nav-end={role.end}
+          data-nav-start={role.start}
+        >
           <div class="timeline-side">
             <div class="tl-marker">
               <span class={`tl-dot ${role.current ? 'tl-dot--current' : ''}`}></span>
@@ -59,6 +70,8 @@ const employmentTypes = employmentTypeOrder.filter((type) =>
     ))}
   </div>
 
+  <MobileTimelineNav ariaLabel="Jump between roles" />
+
   <p class="empty-state mono" hidden>No roles match this filter.</p>
 
 </div>
@@ -83,6 +96,7 @@ const employmentTypes = employmentTypeOrder.filter((type) =>
       });
 
       if (emptyState) emptyState.hidden = visibleCount > 0;
+      document.dispatchEvent(new CustomEvent('timeline-rows-changed'));
     });
   });
 </script>

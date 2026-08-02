@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import MobileTimelineNav from '../../components/MobileTimelineNav.astro';
 import { substackPosts } from '../../data/projects';
 
 const sortedPosts = [...substackPosts].sort(
@@ -27,7 +28,13 @@ function fmtDateShort(d: string) {
     <div class="timeline-spine" aria-hidden="true"></div>
 
     {sortedPosts.map((post) => (
-      <div class="fade-in timeline-row">
+      <div
+        class="fade-in timeline-row"
+        data-nav-label={post.title}
+        data-nav-date={fmtDateShort(post.date)}
+        data-nav-end={post.date}
+        data-nav-start={post.date}
+      >
         <div class="timeline-side">
           <div class="tl-marker">
             <span class="tl-dot"></span>
@@ -51,6 +58,8 @@ function fmtDateShort(d: string) {
       </div>
     ))}
   </div>
+
+  <MobileTimelineNav ariaLabel="Jump between posts" />
 
 </div>
 </Layout>

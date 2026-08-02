@@ -22,7 +22,8 @@ const sunSvg  = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" str
 <nav>
   <div class="inner">
     <a href={withBase('/')} class="name" aria-label="Vidit Ostwal home">
-      <span class="brand">Vidit Ostwal</span>
+      <span class="brand brand--full" aria-hidden="true">Vidit Ostwal</span>
+      <span class="brand brand--short" aria-hidden="true">VO</span>
     </a>
     <div class="right">
       <div class="links">
@@ -128,6 +129,10 @@ const sunSvg  = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" str
     font-feature-settings: 'lnum' 1, 'kern' 1;
   }
 
+  .brand--short {
+    display: none;
+  }
+
   /* Right cluster: links + toggle */
   .right {
     display: flex;
@@ -211,7 +216,62 @@ const sunSvg  = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" str
   :global([data-theme="dark"]) .icon-moon { display: none;  }
 
   /* ── Mobile ── */
-  @media (max-width: 520px) {
+  @media (--mobile-sm) {
+    .inner {
+      padding: 0 1rem;
+    }
+
+    .brand--full { display: none; }
+    .brand--short {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.85rem;
+      height: 1.85rem;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      font-size: 0.62rem;
+      letter-spacing: 0.04em;
+      line-height: 1;
+    }
+
+    .links {
+      gap: 0.5rem;
+    }
+
+    .link {
+      padding: 0.3rem 0.45rem;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      background: transparent;
+      color: var(--text-2);
+      font-size: 0.58rem;
+      line-height: 1;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+
+    .link:hover {
+      color: var(--text);
+      border-color: #c8c8c8;
+      background: var(--surface);
+    }
+
+    .link.on {
+      color: var(--text);
+      border-color: var(--text);
+      background: var(--surface);
+    }
+
+    :global([data-theme="dark"]) .link:hover {
+      border-color: #484848;
+      background: #1a1a1a;
+    }
+
+    :global([data-theme="dark"]) .link.on {
+      border-color: #909090;
+      background: #1a1a1a;
+    }
+
     /* hide nav toggle, show FAB */
     .theme-btn  { display: none; }
     .theme-fab  { display: flex; }

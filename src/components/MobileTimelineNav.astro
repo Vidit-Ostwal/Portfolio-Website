@@ -1,0 +1,127 @@
+---
+interface Props {
+  ariaLabel?: string;
+}
+
+const { ariaLabel = 'Jump between items' } = Astro.props;
+---
+
+<nav class="mobile-timeline-nav" aria-label={ariaLabel} hidden>
+  <span class="mobile-timeline-nav-bound mono" data-bound="top"></span>
+  <div class="mobile-timeline-nav-track">
+    <div class="mobile-timeline-nav-spine" aria-hidden="true"></div>
+    <div class="mobile-timeline-nav-dots"></div>
+  </div>
+  <span class="mobile-timeline-nav-bound mono" data-bound="bottom"></span>
+  <p class="mobile-timeline-nav-date mono" aria-live="polite"></p>
+</nav>
+
+<script>
+  import { initMobileTimelineNav } from '../scripts/mobile-timeline-nav';
+
+  const nav = document.querySelector('.mobile-timeline-nav');
+  initMobileTimelineNav(nav?.closest('.timeline-page') ?? document);
+</script>
+
+<style>
+  .mobile-timeline-nav {
+    display: none;
+  }
+
+  @media (--mobile) {
+    .mobile-timeline-nav:not([hidden]) {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+      position: fixed;
+      right: 0.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 45;
+      width: 2.25rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+
+    .mobile-timeline-nav.is-visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .mobile-timeline-nav-bound {
+      font-size: 0.56rem;
+      letter-spacing: 0.04em;
+      color: var(--text-3);
+      line-height: 1;
+    }
+
+    .mobile-timeline-nav-track {
+      position: relative;
+      width: 100%;
+      height: min(42vh, 220px);
+      touch-action: none;
+      cursor: grab;
+      user-select: none;
+    }
+
+    .mobile-timeline-nav-track.is-dragging {
+      cursor: grabbing;
+    }
+
+    .mobile-timeline-nav-spine {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      transform: translateX(-50%);
+      background: var(--border);
+    }
+
+    .mobile-timeline-nav-dots {
+      position: relative;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1;
+    }
+
+    .mobile-timeline-nav-date {
+      margin: 0;
+      font-size: 0.56rem;
+      letter-spacing: 0.02em;
+      color: var(--text-2);
+      text-align: center;
+      line-height: 1.2;
+      max-width: 2.5rem;
+    }
+  }
+</style>
+
+<style is:global>
+  @media (--mobile) {
+    .mobile-timeline-nav-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      border: 1.5px solid var(--text-3);
+      background: transparent;
+      padding: 0;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .mobile-timeline-nav-dot.is-active {
+      width: 10px;
+      height: 10px;
+      border-color: var(--text);
+      background: var(--text);
+      transform: scale(1);
+    }
+  }
+</style>

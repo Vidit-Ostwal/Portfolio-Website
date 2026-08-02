@@ -6,14 +6,14 @@ import { CHAT_RESUME_URL } from '../lib/chat-resume';
   href={CHAT_RESUME_URL}
   target="_blank"
   rel="noopener"
-  class="chat-resume-fab"
+  class="site-fab site-fab--responsive-label chat-resume-fab"
   aria-label="Chat with Resume on ChatGPT"
 >
   <span class="blinker" aria-hidden="true"></span>
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
   </svg>
-  <span class="label">Chat with Resume</span>
+  <span class="site-fab__label">Chat with Resume</span>
 </a>
 
 <style>
@@ -22,61 +22,5 @@ import { CHAT_RESUME_URL } from '../lib/chat-resume';
     bottom: 1.5rem;
     left: 1.5rem;
     z-index: 49;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.65rem 1rem;
-    border: 1px solid #c5ddd0;
-    border-radius: 999px;
-    background: #f7fbf8;
-    color: #3d5a48;
-    text-decoration: none;
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 0.72rem;
-    letter-spacing: 0.02em;
-    white-space: nowrap;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    transition: border-color 0.15s, background 0.15s, color 0.15s, box-shadow 0.15s, transform 0.15s;
-  }
-  .chat-resume-fab:hover {
-    color: #1a3328;
-    border-color: #9ec9ad;
-    background: #eef7f1;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-    transform: translateY(-1px);
-  }
-
-  .blinker {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #10a37f;
-    flex-shrink: 0;
-    animation: blink 1.5s ease-in-out infinite;
-  }
-  @keyframes blink {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.35; transform: scale(0.85); }
-  }
-
-  :global([data-theme="dark"]) .chat-resume-fab {
-    color: #8fbaa3;
-    border-color: #2a4a38;
-    background: #141f19;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
-  }
-  :global([data-theme="dark"]) .chat-resume-fab:hover {
-    color: #c5e0d4;
-    border-color: #3d6b52;
-    background: #1a2b22;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
-  }
-
-  @media (max-width: 520px) {
-    .chat-resume-fab {
-      padding: 0.75rem;
-      gap: 0.35rem;
-    }
-    .label { display: none; }
   }
 </style>
