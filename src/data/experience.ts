@@ -9,9 +9,9 @@ export interface Role {
 export const experience: Role[] = [
   {
     title: 'Machine Learning — Generative AI',
-    company: 'Piramal Capital & Housing Finance Limited',
-    period: 'Nov 2023 — Present',
-    current: true,
+    company: 'Piramal Capital & Housing Finance Limited · Full Time',
+    period: 'Nov 2023 — July 2026',
+    current: false,
     bullets: [
       'Designed and developed ARYA, an internal chatbot for the sales team using RAG and agentic systems — handled 500,000+ queries since launch and won Best AI Chatbot Product of the Year.',
       'Built Daily-Huddle, a WhatsApp-integrated chatbot for Branch Sales Managers, reducing daily huddle time by 30%.',
@@ -21,7 +21,7 @@ export const experience: Role[] = [
   },
   {
     title: 'Data Engineer',
-    company: 'Piramal Capital & Housing Finance Limited',
+    company: 'Piramal Capital & Housing Finance Limited · Full Time',
     period: 'Jul 2023 — Oct 2023',
     current: false,
     bullets: [
@@ -43,7 +43,7 @@ export const experience: Role[] = [
   },
   {
     title: 'University Leader',
-    company: 'Community Classroom',
+    company: 'Community Classroom · Internship',
     period: 'Jul 2021 — Sep 2021',
     current: false,
     bullets: [
