@@ -29,8 +29,6 @@ import Layout from '../../layouts/Layout.astro';
     </div>
   </section>
 
-  <div class="divider"></div>
-
   <!-- Section 1 — Distribution -->
   <section class="section" id="s1" data-label="Distributions">
     <div class="section-label mono">01 — The Big Idea</div>
@@ -168,8 +166,6 @@ import Layout from '../../layouts/Layout.astro';
     </div>
   </section>
 
-  <div class="divider"></div>
-
   <!-- Section 5 — The question each KL asks -->
   <section class="section" id="s5" data-label="The Question">
     <div class="section-label mono">05 — The Question Each KL Asks</div>
@@ -202,8 +198,6 @@ import Layout from '../../layouts/Layout.astro';
       </ul>
     </div>
   </section>
-
-  <div class="divider"></div>
 
   <!-- Section 6 — Token by Token -->
   <section class="section" id="s6" data-label="Token by Token">
@@ -505,10 +499,6 @@ import Layout from '../../layouts/Layout.astro';
   }
   p strong { color: var(--text); font-weight: 500; }
   p em { font-family: "Lora", serif; font-style: italic; }
-
-  .divider {
-    display: none;
-  }
 
   /* ── Callout ── */
   .callout {
@@ -2413,30 +2403,6 @@ function renderTokenBars(elId, data, color, highlightTok) {
     requestAnimationFrame(() => {
       el.querySelectorAll('.hbar-fill').forEach(bar => {
         bar.style.width = `${bar.dataset.width}%`;
-      });
-    });
-  });
-}
-
-function renderBars(elId, data, color, maxBarH = 58) {
-  const el = document.getElementById(elId);
-  if (!el) return;
-  const maxP = Math.max(...data.map(d => d.p));
-  el.innerHTML = data.map(d => {
-    const targetH = Math.round((d.p / maxP) * maxBarH);
-    return `<div class="bar-col">
-      <div class="bar-pct" style="color:${color}">${Math.round(d.p * 100)}%</div>
-      <div class="bar-track">
-        <div class="bar-fill" data-target="${targetH}" style="height:0;background:${color};opacity:0.82"></div>
-      </div>
-      <div class="bar-tok">${d.t}</div>
-    </div>`;
-  }).join('');
-
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      el.querySelectorAll('.bar-fill').forEach(bar => {
-        bar.style.height = `${bar.dataset.target}px`;
       });
     });
   });
