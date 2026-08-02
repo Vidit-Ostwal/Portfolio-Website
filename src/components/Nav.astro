@@ -142,20 +142,36 @@ const sunSvg  = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" str
 
   .links {
     display: flex;
-    gap: 1.75rem;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .link {
     font-family: "IBM Plex Mono", monospace;
-    font-size: 0.68rem;
-    color: #666666;
+    font-size: 0.62rem;
+    color: var(--text-2);
     text-decoration: none;
-    transition: color 0.15s;
     text-transform: uppercase;
     letter-spacing: 0.06em;
+    line-height: 1;
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: transparent;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
   }
-  .link:hover { color: #333333; }
-  .link.on    { color: #111111; }
+
+  .link:hover {
+    color: var(--text);
+    border-color: #c8c8c8;
+    background: var(--surface);
+  }
+
+  .link.on {
+    color: var(--text);
+    border-color: var(--text);
+    background: var(--surface);
+  }
 
   /* Desktop toggle button — separated by a left border */
   .theme-btn {
@@ -206,9 +222,16 @@ const sunSvg  = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" str
   .icon-moon { display: block; line-height: 0; }
 
   /* Dark mode overrides */
-  :global([data-theme="dark"]) .link     { color: #888888; }
-  :global([data-theme="dark"]) .link:hover { color: #cccccc; }
-  :global([data-theme="dark"]) .link.on  { color: #e8e8e8; }
+  :global([data-theme="dark"]) .link:hover {
+    border-color: #484848;
+    background: #1a1a1a;
+  }
+
+  :global([data-theme="dark"]) .link.on {
+    border-color: #909090;
+    background: #1a1a1a;
+  }
+
   :global([data-theme="dark"]) .theme-btn:hover { border-color: #555555; }
   :global([data-theme="dark"]) .theme-fab { box-shadow: 0 2px 10px rgba(0,0,0,0.4); }
   :global([data-theme="dark"]) .theme-fab:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.5); }
@@ -233,43 +256,6 @@ const sunSvg  = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" str
       font-size: 0.62rem;
       letter-spacing: 0.04em;
       line-height: 1;
-    }
-
-    .links {
-      gap: 0.5rem;
-    }
-
-    .link {
-      padding: 0.3rem 0.45rem;
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      background: transparent;
-      color: var(--text-2);
-      font-size: 0.58rem;
-      line-height: 1;
-      transition: color 0.15s, border-color 0.15s, background 0.15s;
-    }
-
-    .link:hover {
-      color: var(--text);
-      border-color: #c8c8c8;
-      background: var(--surface);
-    }
-
-    .link.on {
-      color: var(--text);
-      border-color: var(--text);
-      background: var(--surface);
-    }
-
-    :global([data-theme="dark"]) .link:hover {
-      border-color: #484848;
-      background: #1a1a1a;
-    }
-
-    :global([data-theme="dark"]) .link.on {
-      border-color: #909090;
-      background: #1a1a1a;
     }
 
     /* hide nav toggle, show FAB */
