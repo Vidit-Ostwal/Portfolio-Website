@@ -1,54 +1,75 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { showcaseProjects as projects } from '../data/showcase-projects';
+
+function parseMonthYear(value?: string) {
+  return value ? new Date(value).getTime() : 0;
+}
+
+const sortedProjects = [...projects].sort(
+  (a, b) => parseMonthYear(b.made) - parseMonthYear(a.made)
+);
 ---
 
 <Layout title="Projects — Vidit Ostwal">
-<div class="page">
+<div class="page timeline-page">
 
   <div class="fade-in header">
     <h1>Projects</h1>
     <p class="sub">Things I've built.</p>
   </div>
 
-  <div class="project-grid">
-    {projects.map((p, i) => (
-      <article class="fade-in project-card">
-        <div class="proj-header">
-              <div class="proj-title">
-                <h2 class="proj-name">{p.name}</h2>
-                {p.made && <p class="proj-made mono">{p.made}</p>}
-              </div>
-              <div class="proj-links">
-                <a href={p.github} target="_blank" rel="noopener" class="icon-link mono" aria-label="GitHub">
-                  <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
-                  </svg>
-                  <span class="link-label">GitHub</span>
-                </a>
-                {p.liveLink && (
-                  <a href={p.liveLink} target="_blank" rel="noopener" class="icon-link icon-link--live mono" aria-label="Live demo">
-                    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                      <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zM4.5 7.5a.5.5 0 0 1 0-1h5.793L8.146 4.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 7.5H4.5z"/>
-                    </svg>
-                    <span class="link-label">Live</span>
-                  </a>
-                )}
-                {p.xPost && (
-                  <a href={p.xPost} target="_blank" rel="noopener" class="icon-link icon-link--x mono" aria-label="X launch post">
-                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.259 5.631zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                    </svg>
-                    <span class="link-label">Launch</span>
-                  </a>
-                )}
-              </div>
+  <div class="timeline-wrap">
+    <div class="timeline-spine" aria-hidden="true"></div>
+
+    {sortedProjects.map((p) => (
+      <div class="fade-in timeline-row">
+        <div class="timeline-side">
+          <div class="tl-marker">
+            <span class="tl-dot"></span>
+          </div>
+          {p.made && (
+            <div class="tl-dates mono">
+              <span class="tl-end">{p.made}</span>
             </div>
-            <p class="proj-tag">{p.tagline}</p>
-            <ul class="bullets">
-              {p.bullets.map(b => <li>{b}</li>)}
-            </ul>
-      </article>
+          )}
+        </div>
+
+        <article class="timeline-card project-card">
+          <div class="proj-title">
+            {p.made && <p class="tl-dates-mobile mono">{p.made}</p>}
+            <h2 class="proj-name">{p.name}</h2>
+          </div>
+          <div class="proj-links">
+            <a href={p.github} target="_blank" rel="noopener" class="icon-link mono" aria-label="GitHub">
+              <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+              </svg>
+              <span class="link-label">GitHub</span>
+            </a>
+            {p.liveLink && (
+              <a href={p.liveLink} target="_blank" rel="noopener" class="icon-link icon-link--live mono" aria-label="Live demo">
+                <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                  <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zM4.5 7.5a.5.5 0 0 1 0-1h5.793L8.146 4.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 7.5H4.5z"/>
+                </svg>
+                <span class="link-label">Live</span>
+              </a>
+            )}
+            {p.xPost && (
+              <a href={p.xPost} target="_blank" rel="noopener" class="icon-link icon-link--x mono" aria-label="X launch post">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.259 5.631zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+                <span class="link-label">Launch</span>
+              </a>
+            )}
+          </div>
+          <p class="proj-tag">{p.tagline}</p>
+          <ul class="bullets">
+            {p.bullets.map(b => <li>{b}</li>)}
+          </ul>
+        </article>
+      </div>
     ))}
   </div>
 
@@ -56,45 +77,17 @@ import { showcaseProjects as projects } from '../data/showcase-projects';
 </Layout>
 
 <style>
-  .page { max-width: 680px; margin: 0 auto; padding: 7rem 1.5rem 2rem; }
-
   .header { margin-bottom: 3rem; }
   h1 { font-size: 1.9rem; font-weight: 600; letter-spacing: -0.025em; color: #111111; margin-bottom: 0.35rem; }
   .sub { font-size: 0.88rem; color: #999999; }
 
   .mono { font-family: "IBM Plex Mono", monospace; }
 
-  .project-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-  }
-
-  .project-card {
-    border: 1px solid #e4e4e4;
-    border-radius: 8px;
-    padding: 1.4rem 1.5rem;
-    background: #ffffff;
-    transition: border-color 0.2s ease;
-  }
-  .project-card:hover {
-    border-color: #c8c8c8;
-  }
-
-  /* Name row: title left, icon links right */
-  .proj-header {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    margin-bottom: 0.3rem;
-  }
-
   .proj-title {
-    flex: 1;
-    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 0.12rem;
+    margin-bottom: 0.55rem;
   }
 
   .proj-name {
@@ -106,18 +99,12 @@ import { showcaseProjects as projects } from '../data/showcase-projects';
     margin: 0;
   }
 
-  .proj-made {
-    font-size: 0.62rem;
-    letter-spacing: 0.04em;
-    color: #aaaaaa;
-    margin: 0;
-  }
-
   .proj-links {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 0.3rem;
-    flex-shrink: 0;
+    margin-bottom: 0.75rem;
   }
 
   .icon-link {
@@ -161,7 +148,6 @@ import { showcaseProjects as projects } from '../data/showcase-projects';
     margin: 0 0 0.85rem;
   }
 
-  /* Bullets */
   .bullets {
     list-style: none;
     display: flex;
@@ -186,10 +172,7 @@ import { showcaseProjects as projects } from '../data/showcase-projects';
 
   :global([data-theme="dark"]) h1 { color: #e8e8e8; }
   :global([data-theme="dark"]) .sub { color: #555555; }
-  :global([data-theme="dark"]) .project-card { background: #1a1a1a; border-color: #2a2a2a; }
-  :global([data-theme="dark"]) .project-card:hover { border-color: #484848; }
   :global([data-theme="dark"]) .proj-name { color: #e0e0e0; }
-  :global([data-theme="dark"]) .proj-made { color: #555555; }
   :global([data-theme="dark"]) .icon-link { color: #808080; background: #222222; border-color: #333333; }
   :global([data-theme="dark"]) .icon-link:hover,
   :global([data-theme="dark"]) .icon-link--live:hover,
@@ -198,4 +181,3 @@ import { showcaseProjects as projects } from '../data/showcase-projects';
   :global([data-theme="dark"]) .bullets li { color: #909090; }
   :global([data-theme="dark"]) .bullets li::before { color: #3a3a3a; }
 </style>
-

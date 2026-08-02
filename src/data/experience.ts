@@ -1,16 +1,35 @@
+export type EmploymentType = 'Full Time' | 'Part Time' | 'Contract' | 'Internship';
+
 export interface Role {
   title: string;
   company: string;
-  period: string;
+  employmentType: EmploymentType;
+  start: string;
+  end: string;
   current: boolean;
   bullets: string[];
 }
 
 export const experience: Role[] = [
   {
+    title: 'Teaching Assistant',
+    company: 'Outskill',
+    employmentType: 'Contract',
+    start: 'Aug 2026',
+    end: 'Aug 2026',
+    current: false,
+    bullets: [
+      'TA consultant for E6 and E7 cohorts — helped design course content and ran breakout rooms, quizzes, and live sessions.',
+      'Supported 320+ learners, resolving doubts in group settings and 1-on-1 sessions.',
+      'Covered RAG, Hugging Face, agents, MCP, observability, and deployments.',
+    ],
+  },
+  {
     title: 'Machine Learning — Generative AI',
-    company: 'Piramal Capital & Housing Finance Limited · Full Time',
-    period: 'Nov 2023 — July 2026',
+    company: 'Piramal Capital & Housing Finance Limited',
+    employmentType: 'Full Time',
+    start: 'Nov 2023',
+    end: 'July 2026',
     current: false,
     bullets: [
       'Designed and developed ARYA, an internal chatbot for the sales team using RAG and agentic systems — handled 500,000+ queries since launch and won Best AI Chatbot Product of the Year.',
@@ -21,8 +40,10 @@ export const experience: Role[] = [
   },
   {
     title: 'Data Engineer',
-    company: 'Piramal Capital & Housing Finance Limited · Full Time',
-    period: 'Jul 2023 — Oct 2023',
+    company: 'Piramal Capital & Housing Finance Limited',
+    employmentType: 'Full Time',
+    start: 'Jul 2023',
+    end: 'Oct 2023',
     current: false,
     bullets: [
       'Orchestrated data pipelines for real-time feature delivery to ML models, improving model performance by 15%.',
@@ -32,8 +53,10 @@ export const experience: Role[] = [
   },
   {
     title: 'Junior Associate',
-    company: 'Indus Insights · Internship',
-    period: 'Jan 2023 — Jun 2023',
+    company: 'Indus Insights',
+    employmentType: 'Internship',
+    start: 'Jan 2023',
+    end: 'Jun 2023',
     current: false,
     bullets: [
       'Developed dynamic forecasting models using delinquency buckets and economic adjustments for seasonal and annual client planning.',
@@ -43,8 +66,10 @@ export const experience: Role[] = [
   },
   {
     title: 'University Leader',
-    company: 'Community Classroom · Internship',
-    period: 'Jul 2021 — Sep 2021',
+    company: 'Community Classroom',
+    employmentType: 'Internship',
+    start: 'Jul 2021',
+    end: 'Sep 2021',
     current: false,
     bullets: [
       'Founded and led a university community promoting accessible education for all.',
@@ -53,8 +78,10 @@ export const experience: Role[] = [
   },
   {
     title: 'Project Leader — Machine Learning',
-    company: 'Swecha · Internship',
-    period: 'Jun 2021 — Jul 2021',
+    company: 'Swecha',
+    employmentType: 'Internship',
+    start: 'Jun 2021',
+    end: 'Jul 2021',
     current: false,
     bullets: [
       'Designed and implemented a fact-checking ML model, scraping news articles from reputable sources.',

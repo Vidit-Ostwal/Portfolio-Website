@@ -1,82 +1,223 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { experience } from '../data/experience';
+import { experience, type EmploymentType } from '../data/experience';
+
+const employmentTypeOrder: EmploymentType[] = ['Full Time', 'Part Time', 'Contract', 'Internship'];
+const employmentTypes = employmentTypeOrder.filter((type) =>
+  experience.some((role) => role.employmentType === type)
+);
 ---
 
 <Layout title="Experience — Vidit Ostwal">
-<div class="page">
+<div class="page timeline-page">
 
   <div class="fade-in header">
     <h1>Experience</h1>
-    <p class="sub">Full-time roles and what I built.</p>
+    <p class="sub">Roles and what I built.</p>
   </div>
 
-  <div class="roles">
-    {experience.map((role, i) => (
-      <div class={`fade-in role ${i < experience.length - 1 ? 'bordered' : ''}`}>
-        <div class="role-meta">
-          <span class="period mono">{role.period}</span>
-          {role.current && <span class="badge mono">now</span>}
-        </div>
-        <div class="role-body">
-          <div class="role-title-row">
-            <h2 class="role-title">{role.title}</h2>
-            <span class="company">{role.company}</span>
-          </div>
-          <ul class="bullets">
-            {role.bullets.map(b => <li>{b}</li>)}
-          </ul>
-        </div>
-      </div>
+  <div class="fade-in filters" role="group" aria-label="Filter by employment type">
+    <button type="button" class="filter-btn mono is-active" data-filter="all">All</button>
+    {employmentTypes.map((type) => (
+      <button type="button" class="filter-btn mono" data-filter={type}>{type}</button>
     ))}
   </div>
+
+  <div class="timeline-wrap">
+    <div class="timeline-spine" aria-hidden="true"></div>
+
+    {experience.map((role) => (
+        <div class="fade-in timeline-row" data-employment-type={role.employmentType}>
+          <div class="timeline-side">
+            <div class="tl-marker">
+              <span class={`tl-dot ${role.current ? 'tl-dot--current' : ''}`}></span>
+            </div>
+            <div class="tl-dates mono">
+              <span class="tl-end">{role.end}</span>
+              <span class="tl-sep">↓</span>
+              <span class="tl-start">{role.start}</span>
+              {role.current && <span class="badge mono">now</span>}
+            </div>
+          </div>
+
+          <article class="timeline-card role-card">
+            <div class="role-header">
+              <div class="role-title-block">
+                <p class="tl-dates-mobile mono">{role.end} → {role.start}</p>
+                <h2 class="role-title">{role.title}</h2>
+                <p class="role-company">
+                  {role.company}
+                  <span class="role-type mono"> · {role.employmentType}</span>
+                </p>
+              </div>
+            </div>
+            <ul class="bullets">
+              {role.bullets.map(b => <li>{b}</li>)}
+            </ul>
+          </article>
+        </div>
+    ))}
+  </div>
+
+  <p class="empty-state mono" hidden>No roles match this filter.</p>
 
 </div>
 </Layout>
 
-<style>
-  .page { max-width: 680px; margin: 0 auto; padding: 7rem 1.5rem 2rem; }
+<script>
+  const filterBtns = document.querySelectorAll<HTMLButtonElement>('.filter-btn');
+  const rows = document.querySelectorAll<HTMLElement>('.timeline-row');
+  const emptyState = document.querySelector<HTMLElement>('.empty-state');
 
-  .header { margin-bottom: 3rem; }
+  filterBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const filter = btn.dataset.filter ?? 'all';
+
+      filterBtns.forEach((b) => b.classList.toggle('is-active', b === btn));
+
+      let visibleCount = 0;
+      rows.forEach((row) => {
+        const show = filter === 'all' || row.dataset.employmentType === filter;
+        row.classList.toggle('is-hidden', !show);
+        if (show) visibleCount += 1;
+      });
+
+      if (emptyState) emptyState.hidden = visibleCount > 0;
+    });
+  });
+</script>
+
+<style>
+  .header { margin-bottom: 1.75rem; }
   h1 { font-size: 1.9rem; font-weight: 600; letter-spacing: -0.025em; color: #111111; margin-bottom: 0.35rem; }
   .sub { font-size: 0.88rem; color: #999999; }
 
-  .roles { display: flex; flex-direction: column; }
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-bottom: 2rem;
+  }
 
-  .role { display: grid; grid-template-columns: 150px 1fr; gap: 2rem; padding: 2rem 0; }
-  .role.bordered { border-bottom: 1px solid #e4e4e4; }
+  .filter-btn {
+    font-size: 0.68rem;
+    letter-spacing: 0.03em;
+    color: #555555;
+    background: #ffffff;
+    border: 1px solid #e4e4e4;
+    border-radius: 999px;
+    padding: 0.35rem 0.75rem;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s, border-color 0.15s;
+  }
+  .filter-btn:hover {
+    color: #111111;
+    border-color: #c8c8c8;
+    background: #f7f7f7;
+  }
+  .filter-btn.is-active {
+    color: #ffffff;
+    background: #111111;
+    border-color: #111111;
+  }
 
-  .role-meta { display: flex; flex-direction: column; gap: 0.5rem; padding-top: 0.1rem; }
+  .empty-state {
+    font-size: 0.78rem;
+    color: #999999;
+    text-align: center;
+    padding: 2rem 0 0.5rem;
+  }
 
   .mono { font-family: "IBM Plex Mono", monospace; }
 
-  .period { font-size: 0.7rem; color: #999999; line-height: 1.5; }
-
   .badge {
-    display: inline-block; font-size: 0.6rem; letter-spacing: 0.05em;
-    color: #555555; border: 1px solid #e4e4e4; border-radius: 3px;
-    padding: 0.1rem 0.45rem; width: fit-content;
+    display: inline-block;
+    font-size: 0.58rem;
+    letter-spacing: 0.05em;
+    color: #555555;
+    border: 1px solid #e4e4e4;
+    border-radius: 3px;
+    padding: 0.08rem 0.4rem;
+    width: fit-content;
+    margin-top: 0.15rem;
   }
 
-  .role-title-row { margin-bottom: 0.85rem; }
-  .role-title { font-size: 0.95rem; font-weight: 600; color: #111111; margin-bottom: 0.2rem; }
-  .company { font-size: 0.82rem; color: #555555; }
+  .role-header {
+    margin-bottom: 0.85rem;
+  }
 
-  .bullets { list-style: none; display: flex; flex-direction: column; gap: 0.55rem; }
-  .bullets li { font-size: 0.85rem; color: #555555; line-height: 1.65; padding-left: 1rem; position: relative; }
-  .bullets li::before { content: '–'; position: absolute; left: 0; color: #cccccc; }
+  .role-title-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+  }
 
-  @media (max-width: 520px) {
-    .role { grid-template-columns: 1fr; gap: 0.6rem; }
+  .role-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #111111;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+    margin: 0;
+  }
+
+  .role-company {
+    font-size: 0.79rem;
+    color: #666666;
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  .role-type {
+    color: #999999;
+    font-size: 0.72rem;
+    letter-spacing: 0.01em;
+  }
+
+  .bullets {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+  }
+  .bullets li {
+    font-size: 0.8rem;
+    color: #555555;
+    line-height: 1.65;
+    padding-left: 1rem;
+    position: relative;
+  }
+  .bullets li::before {
+    content: '–';
+    position: absolute;
+    left: 0;
+    color: #cccccc;
   }
 
   :global([data-theme="dark"]) h1 { color: #e8e8e8; }
   :global([data-theme="dark"]) .sub { color: #555555; }
-  :global([data-theme="dark"]) .role.bordered { border-bottom-color: #2a2a2a; }
-  :global([data-theme="dark"]) .period { color: #555555; }
+  :global([data-theme="dark"]) .filter-btn {
+    color: #909090;
+    background: #1a1a1a;
+    border-color: #2a2a2a;
+  }
+  :global([data-theme="dark"]) .filter-btn:hover {
+    color: #e0e0e0;
+    border-color: #484848;
+    background: #222222;
+  }
+  :global([data-theme="dark"]) .filter-btn.is-active {
+    color: #111111;
+    background: #e8e8e8;
+    border-color: #e8e8e8;
+  }
+  :global([data-theme="dark"]) .empty-state { color: #555555; }
   :global([data-theme="dark"]) .badge { color: #707070; border-color: #2a2a2a; }
   :global([data-theme="dark"]) .role-title { color: #e0e0e0; }
-  :global([data-theme="dark"]) .company { color: #808080; }
+  :global([data-theme="dark"]) .role-company { color: #808080; }
+  :global([data-theme="dark"]) .role-type { color: #555555; }
   :global([data-theme="dark"]) .bullets li { color: #909090; }
   :global([data-theme="dark"]) .bullets li::before { color: #3a3a3a; }
 </style>

@@ -63,7 +63,8 @@ export async function buildLlmsTxt(): Promise<string> {
         ...experience.map((role) =>
           [
             `### ${role.title} — ${role.company}`,
-            `Period: ${role.period}${role.current ? ' (current)' : ''}`,
+            `Type: ${role.employmentType}`,
+            `Period: ${role.start} — ${role.end}${role.current ? ' (current)' : ''}`,
             '',
             bullets(role.bullets),
           ].join('\n')
