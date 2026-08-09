@@ -93,108 +93,167 @@ html.theme-transitioning *::after {
 }
 .fade-in.visible { opacity: 1; transform: translateY(0); }
 
-/* Shared timeline layout (Experience, Projects, Blog) */
-.timeline-page { max-width: var(--content-max); margin: 0 auto; padding: 7rem 1.5rem 2rem; }
+/* Shared timeline layout (Experience, Projects, Blog)
+   Desktop: [dates right-aligned] [dot on spine] [card]
+   Mobile: stacked cards with dates in-card; jump nav on the right */
+.timeline-page {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 7rem 1.5rem 2rem;
+  /* Narrow rail — ranges stack as two lines (e.g. Aug 2026 / Present) */
+  --tl-date-col: 92px;
+  --tl-marker-col: 22px;
+  --tl-gap: 0.85rem;
+}
+
+/* Blog / Projects: single short date (e.g. "Jun 2026") — tighter left rail */
+.timeline-page--compact {
+  --tl-date-col: 72px;
+  --tl-gap: 0.85rem;
+}
 
 .timeline-wrap {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.6rem;
 }
 
 .timeline-spine {
   position: absolute;
-  left: 5px;
-  top: 1.65rem;
-  bottom: 1.65rem;
-  width: 1px;
-  background: linear-gradient(to bottom, var(--border) 0%, var(--border) 92%, transparent 100%);
+  left: calc(var(--tl-date-col) + var(--tl-gap) + (var(--tl-marker-col) / 2) - 1px);
+  top: 0.35rem;
+  bottom: 0.35rem;
+  width: 2px;
+  border-radius: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    var(--border) 3%,
+    var(--border) 97%,
+    transparent 100%
+  );
   pointer-events: none;
 }
 
 .timeline-row {
   display: grid;
-  grid-template-columns: 132px 1fr;
-  gap: 1.35rem;
+  grid-template-columns: var(--tl-date-col) var(--tl-marker-col) 1fr;
+  column-gap: var(--tl-gap);
   align-items: start;
 }
 
 .timeline-row.is-hidden { display: none; }
 
 .timeline-side {
+  display: contents;
+}
+
+.tl-dates {
+  grid-column: 1;
   display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding-top: 1.55rem;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.22rem;
+  min-width: 0;
+  padding-top: 1.35rem;
+  text-align: right;
 }
 
 .tl-marker {
-  flex-shrink: 0;
-  width: 11px;
+  grid-column: 2;
   display: flex;
   justify-content: center;
-  padding-top: 0.15rem;
+  padding-top: 1.45rem;
+  position: relative;
+  z-index: 1;
 }
 
 .tl-dot {
-  width: 11px;
-  height: 11px;
+  width: 13px;
+  height: 13px;
   border-radius: 50%;
   border: 2px solid var(--text);
   background: var(--bg);
-  position: relative;
-  z-index: 1;
+  box-shadow: 0 0 0 4px var(--bg);
   flex-shrink: 0;
-  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .tl-dot--current {
   background: var(--text);
-  box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px var(--border);
+  box-shadow:
+    0 0 0 4px var(--bg),
+    0 0 0 6px var(--border);
 }
 
-.tl-dates {
+.tl-range {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  min-width: 0;
-}
-
-.tl-end {
+  align-items: flex-end;
+  gap: 0.08rem;
   font-size: 0.68rem;
-  color: var(--text);
   font-weight: 500;
+  color: var(--text);
   letter-spacing: 0.01em;
-  line-height: 1.35;
+  line-height: 1.3;
+}
+.tl-range-start,
+.tl-range-end {
+  display: block;
+  white-space: nowrap;
+}
+.tl-range-end {
+  color: var(--text-2);
+  font-weight: 400;
 }
 
-.tl-sep {
-  font-size: 0.58rem;
-  color: #cccccc;
-  line-height: 1;
+.tl-duration {
+  font-size: 0.62rem;
+  color: var(--text-3);
+  letter-spacing: 0.01em;
+  line-height: 1.3;
 }
 
-.tl-start {
-  font-size: 0.65rem;
-  color: #888888;
-  line-height: 1.35;
+.tl-badge {
+  display: inline-block;
+  margin-top: 0.1rem;
+  font-size: 0.54rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.1rem 0.3rem;
+  line-height: 1.2;
+  max-width: 100%;
 }
+
+/* Legacy class names still used in a few places */
+.tl-end { font-size: 0.72rem; font-weight: 500; color: var(--text); line-height: 1.35; }
+.tl-start { font-size: 0.65rem; color: var(--text-3); line-height: 1.35; }
+.tl-sep { display: none; }
 
 .tl-dates-mobile {
   display: none;
-  font-size: 0.65rem;
-  color: #888888;
-  margin-bottom: 0.35rem;
+  font-size: 0.68rem;
+  color: var(--text-3);
+  margin-bottom: 0.4rem;
   letter-spacing: 0.01em;
 }
 
 .timeline-card {
+  grid-column: 3;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1.4rem 1.5rem;
+  border-radius: 10px;
+  padding: 1.35rem 1.45rem;
   background: var(--bg);
-  transition: border-color 0.2s ease, background 0.15s ease;
+  transition:
+    border-color 0.2s ease,
+    background 0.15s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 [data-theme="dark"] .timeline-card {
@@ -202,40 +261,65 @@ html.theme-transitioning *::after {
 }
 
 .timeline-row:hover .tl-dot {
-  border-color: #444444;
-  transform: scale(1.08);
+  transform: scale(1.12);
 }
 
 .timeline-row:hover .tl-dot--current {
-  background: #333333;
+  box-shadow:
+    0 0 0 4px var(--bg),
+    0 0 0 7px var(--text-3);
 }
 
 .timeline-row:hover .timeline-card {
   border-color: #c8c8c8;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
 }
 
-[data-theme="dark"] .tl-sep { color: #3a3a3a; }
-[data-theme="dark"] .tl-start { color: #555555; }
-[data-theme="dark"] .tl-dates-mobile { color: #555555; }
-[data-theme="dark"] .timeline-row:hover .tl-dot { border-color: #f0f0f0; }
-[data-theme="dark"] .timeline-row:hover .tl-dot--current { background: #ffffff; }
-[data-theme="dark"] .timeline-row:hover .timeline-card { border-color: #484848; }
+.timeline-row--current .tl-range {
+  color: var(--text);
+}
+
+[data-theme="dark"] .tl-dates-mobile { color: var(--text-3); }
+[data-theme="dark"] .timeline-row:hover .timeline-card {
+  border-color: #484848;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+}
 
 @media (--mobile) {
-  .timeline-page { max-width: min(var(--content-max), 100%); }
+  .timeline-page {
+    max-width: min(var(--content-max), 100%);
+  }
 
-  .timeline-spine,
-  .timeline-side {
+  .timeline-wrap {
+    gap: 1.15rem;
+  }
+
+  .timeline-spine {
     display: none;
   }
 
   .timeline-row {
     grid-template-columns: 1fr;
-    gap: 0;
+    column-gap: 0;
+  }
+
+  .tl-dates,
+  .tl-marker {
+    display: none;
+  }
+
+  .timeline-card {
+    grid-column: 1;
   }
 
   .tl-dates-mobile {
     display: block;
+  }
+
+  .timeline-row:hover .timeline-card {
+    transform: none;
+    box-shadow: none;
   }
 
   .project-card .link-label {

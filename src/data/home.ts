@@ -17,9 +17,9 @@ export const profile = {
     { name: 'Prime Intellect', url: 'https://github.com/PrimeIntellect-ai/verifiers' },
   ],
   storyParagraphs: [
-    'I graduated from BITS Pilani in 2023 and have been working as a Gen AI Engineer since — iterating on agents, RAG pipelines, and fine-tuning. Outside of work, I contribute to open source projects.',
-    'Around January 2025, I started exploring CrewAI. I really wanted to understand the core of how agent orchestration frameworks are built. I went deep — contributed 35+ merged PRs, became the 11th contributor on the open-source repo, and placed 2nd runner-up at their Fall Hackathon. By December 2025, I had enough credibility to join the review team for a book on the framework that\'s about to be published.',
-    'After that, my curiosity shifted toward RL environments. I started exploring Prime Intellect and OpenEnv, built a few playful environments, and now I\'m excited to work on building environments genuinely useful for training frontier models.',
+    'I graduated from BITS Pilani in 2023 and spent the next few years as a Gen AI Engineer — iterating on agents, RAG pipelines, and fine-tuning. Outside of work, I contribute to open source projects.',
+    'Around January 2025, I started exploring CrewAI. I really wanted to understand the core of how agent orchestration frameworks are built. I went deep — contributed 35+ merged PRs, became the 11th contributor on the open-source repo, and placed 2nd runner-up at their Fall Hackathon. By December 2025, I had enough credibility to join the review team for a book on the framework that\'s about to be published. In August 2026, I joined CrewAI full-time as an Open Source Developer.',
+    'Along the way, my curiosity also shifted toward RL environments. I started exploring Prime Intellect and OpenEnv, built a few playful environments, and I\'m excited to keep building environments genuinely useful for training frontier models.',
     'I\'ve contributed to CrewAI, Ragas, GitHub MCP, OpenEnv, and Prime Intellect. Check out my GitHub to see the open-source work. I actively share what I am building on X.',
   ],
 };

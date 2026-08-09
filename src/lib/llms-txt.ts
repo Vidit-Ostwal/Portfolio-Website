@@ -65,6 +65,7 @@ export async function buildLlmsTxt(): Promise<string> {
             `### ${role.title} — ${role.company}`,
             `Type: ${role.employmentType}`,
             `Period: ${role.start} — ${role.end}${role.current ? ' (current)' : ''}`,
+            ...(role.companyUrl ? [`Company: ${role.companyUrl}`] : []),
             '',
             bullets(role.bullets),
           ].join('\n')

@@ -7,6 +7,8 @@ const sortedPosts = [...substackPosts].sort(
   (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
 );
 
+const categories = [...new Set(sortedPosts.map((post) => post.category))];
+
 function fmtDate(d: string) {
   return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
@@ -17,11 +19,18 @@ function fmtDateShort(d: string) {
 ---
 
 <Layout title="Blog — Vidit Ostwal">
-<div class="page timeline-page">
+<div class="page timeline-page timeline-page--compact">
 
   <div class="fade-in header">
     <h1>Writing</h1>
     <p class="sub">I share what I'm learning.</p>
+  </div>
+
+  <div class="fade-in filters" role="group" aria-label="Filter by category">
+    <button type="button" class="filter-btn mono is-active" data-filter="all">All</button>
+    {categories.map((category) => (
+      <button type="button" class="filter-btn mono" data-filter={category}>{category}</button>
+    ))}
   </div>
 
   <div class="timeline-wrap">
@@ -30,19 +39,18 @@ function fmtDateShort(d: string) {
     {sortedPosts.map((post) => (
       <div
         class="fade-in timeline-row"
+        data-category={post.category}
         data-nav-label={post.title}
         data-nav-date={fmtDateShort(post.date)}
         data-nav-end={post.date}
         data-nav-start={post.date}
       >
         <div class="timeline-side">
+          <div class="tl-dates mono">
+            <span class="tl-range">{fmtDateShort(post.date)}</span>
+          </div>
           <div class="tl-marker">
             <span class="tl-dot"></span>
-          </div>
-          <div class="tl-dates mono">
-            <span class="tl-end">{fmtDateShort(post.date)}</span>
-            <span class="tl-sep">↓</span>
-            <span class="tl-start">{post.category}</span>
           </div>
         </div>
 
@@ -51,8 +59,11 @@ function fmtDateShort(d: string) {
           {...(post.url.startsWith('http') ? { target: '_blank', rel: 'noopener' } : {})}
           class="timeline-card post-card"
         >
-          <p class="tl-dates-mobile mono">{fmtDate(post.date)} · {post.category}</p>
-          <h2 class="post-title">{post.title}</h2>
+          <p class="tl-dates-mobile mono">{fmtDate(post.date)}</p>
+          <div class="post-card-top">
+            <h2 class="post-title">{post.title}</h2>
+            <span class="post-tag mono">{post.category}</span>
+          </div>
           {post.summary && <p class="post-summary">{post.summary}</p>}
         </a>
       </div>
@@ -61,26 +72,115 @@ function fmtDateShort(d: string) {
 
   <MobileTimelineNav ariaLabel="Jump between posts" />
 
+  <p class="empty-state mono" hidden>No posts match this filter.</p>
+
 </div>
 </Layout>
 
+<script>
+  const filterBtns = document.querySelectorAll<HTMLButtonElement>('.filter-btn');
+  const rows = document.querySelectorAll<HTMLElement>('.timeline-row');
+  const emptyState = document.querySelector<HTMLElement>('.empty-state');
+
+  filterBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const filter = btn.dataset.filter ?? 'all';
+
+      filterBtns.forEach((b) => b.classList.toggle('is-active', b === btn));
+
+      let visibleCount = 0;
+      rows.forEach((row) => {
+        const show = filter === 'all' || row.dataset.category === filter;
+        row.classList.toggle('is-hidden', !show);
+        if (show) visibleCount += 1;
+      });
+
+      if (emptyState) emptyState.hidden = visibleCount > 0;
+      document.dispatchEvent(new CustomEvent('timeline-rows-changed'));
+    });
+  });
+</script>
+
 <style>
-  .header { margin-bottom: 3rem; }
+  .header { margin-bottom: 1.75rem; }
   h1 { font-size: 1.9rem; font-weight: 600; letter-spacing: -0.025em; color: #111111; margin-bottom: 0.35rem; }
   .sub { font-size: 0.88rem; color: #999999; }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-bottom: 2rem;
+  }
+
+  .filter-btn {
+    font-size: 0.68rem;
+    letter-spacing: 0.03em;
+    color: #555555;
+    background: #ffffff;
+    border: 1px solid #e4e4e4;
+    border-radius: 999px;
+    padding: 0.35rem 0.75rem;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s, border-color 0.15s;
+  }
+  .filter-btn:hover {
+    color: #111111;
+    border-color: #c8c8c8;
+    background: #f7f7f7;
+  }
+  .filter-btn.is-active {
+    color: #ffffff;
+    background: #111111;
+    border-color: #111111;
+  }
+
+  .empty-state {
+    font-size: 0.78rem;
+    color: #999999;
+    text-align: center;
+    padding: 2rem 0 0.5rem;
+  }
+
+  .mono { font-family: "IBM Plex Mono", monospace; }
 
   .post-card {
     display: block;
     text-decoration: none;
   }
 
+  .post-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .post-tag {
+    flex-shrink: 0;
+    max-width: 45%;
+    font-size: 0.68rem;
+    letter-spacing: 0.03em;
+    color: #555555;
+    border: 1px solid #e4e4e4;
+    border-radius: 3px;
+    padding: 0.18rem 0.55rem;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .post-title {
+    flex: 1;
+    min-width: 0;
     font-size: 0.9rem;
     font-weight: 600;
     color: #111111;
     letter-spacing: -0.01em;
     line-height: 1.35;
-    margin: 0 0 0.35rem;
+    margin: 0;
   }
 
   .post-summary {
@@ -92,6 +192,26 @@ function fmtDateShort(d: string) {
 
   :global([data-theme="dark"]) h1 { color: #e8e8e8; }
   :global([data-theme="dark"]) .sub { color: #555555; }
+  :global([data-theme="dark"]) .filter-btn {
+    color: #909090;
+    background: #1a1a1a;
+    border-color: #2a2a2a;
+  }
+  :global([data-theme="dark"]) .filter-btn:hover {
+    color: #e0e0e0;
+    border-color: #484848;
+    background: #222222;
+  }
+  :global([data-theme="dark"]) .filter-btn.is-active {
+    color: #111111;
+    background: #e8e8e8;
+    border-color: #e8e8e8;
+  }
+  :global([data-theme="dark"]) .empty-state { color: #555555; }
+  :global([data-theme="dark"]) .post-tag {
+    color: #707070;
+    border-color: #2a2a2a;
+  }
   :global([data-theme="dark"]) .post-title { color: #e0e0e0; }
   :global([data-theme="dark"]) .post-summary { color: #808080; }
 </style>

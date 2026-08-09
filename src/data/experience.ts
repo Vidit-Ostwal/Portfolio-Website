@@ -3,6 +3,7 @@ export type EmploymentType = 'Full Time' | 'Part Time' | 'Contract' | 'Internshi
 export interface Role {
   title: string;
   company: string;
+  companyUrl?: string;
   employmentType: EmploymentType;
   start: string;
   end: string;
@@ -10,10 +11,80 @@ export interface Role {
   bullets: string[];
 }
 
+export interface CompanyGroup {
+  company: string;
+  companyUrl?: string;
+  roles: Role[];
+}
+
+/** Group consecutive roles at the same company (preserves array order). */
+export function groupExperienceByCompany(roles: Role[]): CompanyGroup[] {
+  const groups: CompanyGroup[] = [];
+  for (const role of roles) {
+    const last = groups[groups.length - 1];
+    if (last && last.company === role.company) {
+      last.roles.push(role);
+    } else {
+      groups.push({
+        company: role.company,
+        companyUrl: role.companyUrl,
+        roles: [role],
+      });
+    }
+  }
+  return groups;
+}
+
+function parseMonthYear(value: string, current = false): Date {
+  if (current || value === 'Present') {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  }
+  const parsed = new Date(`${value} 1`);
+  if (Number.isNaN(parsed.getTime())) {
+    return new Date();
+  }
+  return new Date(parsed.getFullYear(), parsed.getMonth(), 1);
+}
+
+/** Human-readable tenure, e.g. "3 mo", "2 yrs 9 mo". */
+export function formatDuration(start: string, end: string, current = false): string {
+  const startDate = parseMonthYear(start);
+  const endDate = parseMonthYear(end, current);
+  let months =
+    (endDate.getFullYear() - startDate.getFullYear()) * 12 +
+    (endDate.getMonth() - startDate.getMonth()) +
+    1;
+  if (months < 1) months = 1;
+
+  const years = Math.floor(months / 12);
+  const rem = months % 12;
+  if (years === 0) return `${rem} mo`;
+  if (rem === 0) return `${years} yr${years === 1 ? '' : 's'}`;
+  return `${years} yr${years === 1 ? '' : 's'} ${rem} mo`;
+}
+
+export function formatDateRange(start: string, end: string): string {
+  return `${start} – ${end}`;
+}
+
 export const experience: Role[] = [
+  {
+    title: 'Open Source Developer',
+    company: 'CrewAI',
+    companyUrl: 'https://www.crewai.com',
+    employmentType: 'Full Time',
+    start: 'Aug 2026',
+    end: 'Present',
+    current: true,
+    bullets: [
+      'Working on the CrewAI open-source agent orchestration framework — contributing features, reviews, and core improvements.',
+    ],
+  },
   {
     title: 'Teaching Assistant',
     company: 'Outskill',
+    companyUrl: 'https://www.outskill.com',
     employmentType: 'Contract',
     start: 'Aug 2026',
     end: 'Aug 2026',
@@ -27,6 +98,7 @@ export const experience: Role[] = [
   {
     title: 'Machine Learning — Generative AI',
     company: 'Piramal Capital & Housing Finance Limited',
+    companyUrl: 'https://www.piramalfinance.com',
     employmentType: 'Full Time',
     start: 'Nov 2023',
     end: 'July 2026',
@@ -41,6 +113,7 @@ export const experience: Role[] = [
   {
     title: 'Data Engineer',
     company: 'Piramal Capital & Housing Finance Limited',
+    companyUrl: 'https://www.piramalfinance.com',
     employmentType: 'Full Time',
     start: 'Jul 2023',
     end: 'Oct 2023',
@@ -54,6 +127,7 @@ export const experience: Role[] = [
   {
     title: 'Junior Associate',
     company: 'Indus Insights',
+    companyUrl: 'https://www.indusinsights.com',
     employmentType: 'Internship',
     start: 'Jan 2023',
     end: 'Jun 2023',
@@ -79,6 +153,7 @@ export const experience: Role[] = [
   {
     title: 'Project Leader — Machine Learning',
     company: 'Swecha',
+    companyUrl: 'https://swecha.org',
     employmentType: 'Internship',
     start: 'Jun 2021',
     end: 'Jul 2021',

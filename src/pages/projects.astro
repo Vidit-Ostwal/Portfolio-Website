@@ -13,7 +13,7 @@ const sortedProjects = [...projects].sort(
 ---
 
 <Layout title="Projects — Vidit Ostwal">
-<div class="page timeline-page">
+<div class="page timeline-page timeline-page--compact">
 
   <div class="fade-in header">
     <h1>Projects</h1>
@@ -32,14 +32,16 @@ const sortedProjects = [...projects].sort(
         data-nav-start={p.made ?? ''}
       >
         <div class="timeline-side">
+          {p.made ? (
+            <div class="tl-dates mono">
+              <span class="tl-range">{p.made}</span>
+            </div>
+          ) : (
+            <div class="tl-dates" aria-hidden="true"></div>
+          )}
           <div class="tl-marker">
             <span class="tl-dot"></span>
           </div>
-          {p.made && (
-            <div class="tl-dates mono">
-              <span class="tl-end">{p.made}</span>
-            </div>
-          )}
         </div>
 
         <article class="timeline-card project-card">

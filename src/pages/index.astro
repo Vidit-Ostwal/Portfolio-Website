@@ -4,7 +4,7 @@ import { withBase } from '../lib/paths';
 
 ---
 
-<Layout title="Vidit Ostwal" description="ML/AI Engineer building agentic AI systems and RL environments.">
+<Layout title="Vidit Ostwal" description="ML/AI Engineer building agentic AI systems and RL environments." showVisitorMap>
 <div class="page">
 
   <!-- HERO -->
@@ -66,7 +66,7 @@ import { withBase } from '../lib/paths';
     <h2 class="label mono">My Story</h2>
     <div class="story">
       <p class="story-para">
-        I graduated from <strong>BITS Pilani</strong> in 2023 and have been working as a Gen AI Engineer since —
+        I graduated from <strong>BITS Pilani</strong> in 2023 and spent the next few years as a Gen AI Engineer —
         iterating on agents, RAG pipelines, and fine-tuning. Outside of work, I contribute to open source projects.
       </p>
       <p class="story-para">
@@ -74,12 +74,13 @@ import { withBase } from '../lib/paths';
         of how agent orchestration frameworks are built. I went deep — contributed <strong class="stat">35+ merged PRs</strong>,
         became the <strong class="stat">11th contributor</strong> on the open-source repo, and placed <strong class="stat">2nd runner-up</strong>
         at their Fall Hackathon. By December 2025, I had enough credibility to join the review team for a book
-        on the framework that's about to be published.
+        on the framework that's about to be published. In August 2026, I joined CrewAI full-time as an
+        <strong>Open Source Developer</strong>.
       </p>
       <p class="story-para">
-        After that, my curiosity shifted toward <strong>RL environments</strong>. I started exploring
-        Prime Intellect and OpenEnv, built a few playful environments, and now I'm excited to work on
-        building environments genuinely useful for training frontier models.
+        Along the way, my curiosity also shifted toward <strong>RL environments</strong>. I started exploring
+        Prime Intellect and OpenEnv, built a few playful environments, and I'm excited to keep building
+        environments genuinely useful for training frontier models.
       </p>
       <p class="story-para">
         I've contributed to
@@ -94,8 +95,24 @@ import { withBase } from '../lib/paths';
 </Layout>
 
 <style>
-  /* ── Base ── */
-  .page { max-width: 700px; margin: 0 auto; padding: 5.5rem 1.5rem 2rem; }
+  /* ── Base ──
+     Fill the first screen so My Story sits in view on load; map + footer
+     only appear after the user scrolls. Leftover height becomes bottom pad. */
+  .page {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 5.5rem 1.5rem 2.5rem;
+    box-sizing: border-box;
+    min-height: 100vh;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+  }
+  .page::after {
+    content: '';
+    flex: 1 1 auto;
+    min-height: 1.5rem;
+  }
   .mono { font-family: "IBM Plex Mono", monospace; }
 
   /* ── Hero ── */
@@ -294,7 +311,7 @@ import { withBase } from '../lib/paths';
 
   /* ── Mobile ── */
   @media (--mobile-sm) {
-    .page { padding: 5rem 1.25rem 2rem; }
+    .page { padding: 5rem 1.25rem 2.5rem; }
 
     .hero {
       gap: 1.4rem;

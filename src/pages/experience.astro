@@ -1,12 +1,20 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import MobileTimelineNav from '../components/MobileTimelineNav.astro';
-import { experience, type EmploymentType } from '../data/experience';
+import {
+  experience,
+  formatDateRange,
+  formatDuration,
+  groupExperienceByCompany,
+  type EmploymentType,
+} from '../data/experience';
 
 const employmentTypeOrder: EmploymentType[] = ['Full Time', 'Part Time', 'Contract', 'Internship'];
 const employmentTypes = employmentTypeOrder.filter((type) =>
   experience.some((role) => role.employmentType === type)
 );
+
+const companyGroups = groupExperienceByCompany(experience);
 ---
 
 <Layout title="Experience — Vidit Ostwal">
@@ -27,46 +35,78 @@ const employmentTypes = employmentTypeOrder.filter((type) =>
   <div class="timeline-wrap">
     <div class="timeline-spine" aria-hidden="true"></div>
 
-    {experience.map((role, index) => (
-        <div
-          class="fade-in timeline-row"
-          data-employment-type={role.employmentType}
-          data-role-index={index}
-          data-start={role.start}
-          data-end={role.end}
-          data-nav-label={role.title}
-          data-nav-date={role.end}
-          data-nav-end={role.end}
-          data-nav-start={role.start}
-        >
-          <div class="timeline-side">
-            <div class="tl-marker">
-              <span class={`tl-dot ${role.current ? 'tl-dot--current' : ''}`}></span>
-            </div>
-            <div class="tl-dates mono">
-              <span class="tl-end">{role.end}</span>
-              <span class="tl-sep">↓</span>
-              <span class="tl-start">{role.start}</span>
-              {role.current && <span class="badge mono">now</span>}
-            </div>
-          </div>
+    {companyGroups.map((group) => (
+      <div class="company-group" data-company={group.company}>
+        {group.roles.map((role, roleIndex) => {
+          const isFirstInCompany = roleIndex === 0;
+          const isContinued = roleIndex > 0;
+          const dateRange = formatDateRange(role.start, role.end);
+          const duration = formatDuration(role.start, role.end, role.current);
 
-          <article class="timeline-card role-card">
-            <div class="role-header">
-              <div class="role-title-block">
-                <p class="tl-dates-mobile mono">{role.end} → {role.start}</p>
-                <h2 class="role-title">{role.title}</h2>
-                <p class="role-company">
-                  {role.company}
-                  <span class="role-type mono"> · {role.employmentType}</span>
-                </p>
+          return (
+            <div
+              class:list={['fade-in', 'timeline-row', role.current && 'timeline-row--current', isContinued && 'timeline-row--continued']}
+              data-employment-type={role.employmentType}
+              data-nav-label={role.title}
+              data-nav-date={role.end}
+              data-nav-end={role.end}
+              data-nav-start={role.start}
+            >
+              <div class="timeline-side">
+                <div class="tl-dates mono">
+                  <span class="tl-range">
+                    <span class="tl-range-start">{role.start}</span>
+                    <span class="tl-range-end">{role.end}</span>
+                  </span>
+                  <span class="tl-duration">{duration}</span>
+                  {role.current && <span class="tl-badge mono">Current</span>}
+                </div>
+                <div class="tl-marker">
+                  <span class:list={['tl-dot', role.current && 'tl-dot--current']}></span>
+                </div>
               </div>
+
+              <article class:list={['timeline-card', 'role-card', role.current && 'role-card--current', isContinued && 'role-card--continued']}>
+                <div class="role-header">
+                  <p class="tl-dates-mobile mono">
+                    {dateRange}
+                    <span class="tl-duration-mobile"> · {duration}</span>
+                    {role.current && <span class="tl-badge mono tl-badge--inline">Current</span>}
+                  </p>
+
+                  <div class="role-card-top">
+                    <h2 class="role-title">{role.title}</h2>
+                    <span class="role-tag mono">{role.employmentType}</span>
+                  </div>
+
+                  {isFirstInCompany ? (
+                    <p class="role-company">
+                      {group.companyUrl ? (
+                        <a href={group.companyUrl} target="_blank" rel="noopener" class="company-link">{group.company}</a>
+                      ) : (
+                        group.company
+                      )}
+                    </p>
+                  ) : (
+                    <p class="role-company role-company--continued">
+                      Earlier role at{' '}
+                      {group.companyUrl ? (
+                        <a href={group.companyUrl} target="_blank" rel="noopener" class="company-link">{group.company}</a>
+                      ) : (
+                        group.company
+                      )}
+                    </p>
+                  )}
+                </div>
+
+                <ul class="bullets">
+                  {role.bullets.map((b) => <li>{b}</li>)}
+                </ul>
+              </article>
             </div>
-            <ul class="bullets">
-              {role.bullets.map(b => <li>{b}</li>)}
-            </ul>
-          </article>
-        </div>
+          );
+        })}
+      </div>
     ))}
   </div>
 
@@ -80,6 +120,7 @@ const employmentTypes = employmentTypeOrder.filter((type) =>
 <script>
   const filterBtns = document.querySelectorAll<HTMLButtonElement>('.filter-btn');
   const rows = document.querySelectorAll<HTMLElement>('.timeline-row');
+  const groups = document.querySelectorAll<HTMLElement>('.company-group');
   const emptyState = document.querySelector<HTMLElement>('.empty-state');
 
   filterBtns.forEach((btn) => {
@@ -93,6 +134,11 @@ const employmentTypes = employmentTypeOrder.filter((type) =>
         const show = filter === 'all' || row.dataset.employmentType === filter;
         row.classList.toggle('is-hidden', !show);
         if (show) visibleCount += 1;
+      });
+
+      groups.forEach((group) => {
+        const hasVisible = group.querySelectorAll('.timeline-row:not(.is-hidden)').length > 0;
+        group.classList.toggle('is-hidden', !hasVisible);
       });
 
       if (emptyState) emptyState.hidden = visibleCount > 0;
@@ -144,35 +190,59 @@ const employmentTypes = employmentTypeOrder.filter((type) =>
 
   .mono { font-family: "IBM Plex Mono", monospace; }
 
-  .badge {
+  .company-group {
+    display: contents;
+  }
+  .company-group.is-hidden {
+    display: none;
+  }
+
+  .timeline-row--continued {
+    margin-top: -0.35rem;
+  }
+
+  .tl-badge--inline {
     display: inline-block;
-    font-size: 0.58rem;
-    letter-spacing: 0.05em;
-    color: #555555;
-    border: 1px solid #e4e4e4;
-    border-radius: 3px;
-    padding: 0.08rem 0.4rem;
-    width: fit-content;
-    margin-top: 0.15rem;
+    margin: 0 0 0 0.4rem;
+    vertical-align: middle;
   }
 
   .role-header {
     margin-bottom: 0.85rem;
   }
 
-  .role-title-block {
+  .role-card-top {
     display: flex;
-    flex-direction: column;
-    gap: 0.12rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem;
+    margin-bottom: 0.2rem;
   }
 
   .role-title {
+    flex: 1;
+    min-width: 0;
     font-size: 0.9rem;
     font-weight: 600;
     color: #111111;
     letter-spacing: -0.01em;
     line-height: 1.25;
     margin: 0;
+  }
+
+  .role-tag {
+    flex-shrink: 0;
+    max-width: 45%;
+    font-size: 0.68rem;
+    letter-spacing: 0.03em;
+    color: #555555;
+    border: 1px solid #e4e4e4;
+    border-radius: 3px;
+    padding: 0.18rem 0.55rem;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .role-company {
@@ -182,10 +252,26 @@ const employmentTypes = employmentTypeOrder.filter((type) =>
     margin: 0;
   }
 
-  .role-type {
-    color: #999999;
-    font-size: 0.72rem;
-    letter-spacing: 0.01em;
+  .role-company--continued {
+    font-size: 0.74rem;
+    color: #888888;
+  }
+
+  .company-link {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-color: #c8c8c8;
+    transition: color 0.15s, text-decoration-color 0.15s;
+  }
+  .company-link:hover {
+    color: #111111;
+    text-decoration-color: #888888;
+  }
+
+  .role-card--current {
+    border-color: #c0c0c0;
+    box-shadow: inset 3px 0 0 #111111;
   }
 
   .bullets {
@@ -210,6 +296,10 @@ const employmentTypes = employmentTypeOrder.filter((type) =>
     color: #cccccc;
   }
 
+  @media (--mobile) {
+    .timeline-row--continued { margin-top: 0; }
+  }
+
   :global([data-theme="dark"]) h1 { color: #e8e8e8; }
   :global([data-theme="dark"]) .sub { color: #555555; }
   :global([data-theme="dark"]) .filter-btn {
@@ -228,10 +318,22 @@ const employmentTypes = employmentTypeOrder.filter((type) =>
     border-color: #e8e8e8;
   }
   :global([data-theme="dark"]) .empty-state { color: #555555; }
-  :global([data-theme="dark"]) .badge { color: #707070; border-color: #2a2a2a; }
   :global([data-theme="dark"]) .role-title { color: #e0e0e0; }
+  :global([data-theme="dark"]) .role-tag {
+    color: #707070;
+    border-color: #2a2a2a;
+  }
   :global([data-theme="dark"]) .role-company { color: #808080; }
-  :global([data-theme="dark"]) .role-type { color: #555555; }
+  :global([data-theme="dark"]) .role-company--continued { color: #555555; }
+  :global([data-theme="dark"]) .company-link { text-decoration-color: #3a3a3a; }
+  :global([data-theme="dark"]) .company-link:hover {
+    color: #e0e0e0;
+    text-decoration-color: #707070;
+  }
+  :global([data-theme="dark"]) .role-card--current {
+    border-color: #484848;
+    box-shadow: inset 3px 0 0 #e8e8e8;
+  }
   :global([data-theme="dark"]) .bullets li { color: #909090; }
   :global([data-theme="dark"]) .bullets li::before { color: #3a3a3a; }
 </style>
